@@ -1,0 +1,27 @@
+# Godot — локальный кеш и настройки редактора
+.godot/
+.import/
+export.cfg
+export_credentials.cfg
+
+# Сборки и временные файлы
+build/
+builds/
+dist/
+*.exe
+*.dll
+*.pdb
+*.log
+*.tmp
+*.bak
+*.zip
+
+# Личные настройки и секреты
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
