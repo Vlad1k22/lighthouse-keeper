@@ -26,6 +26,13 @@ var sanity_bar: ProgressBar
 var stamina_bar: ProgressBar
 var work_bar: ProgressBar
 var danger: ColorRect
+var atmosphere: ColorRect
+var reader: Control
+var reader_title: Label
+var reader_text: Label
+var reader_count: Label
+var previous_page: Button
+var next_page: Button
 
 func _ready() -> void:
 	game = get_parent()
@@ -33,8 +40,16 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+	atmosphere = ColorRect.new()
+	atmosphere.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	atmosphere.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var atmosphere_material := ShaderMaterial.new()
+	atmosphere_material.shader = load("res://shaders/screen_atmosphere.gdshader")
+	atmosphere.material = atmosphere_material
+	root.add_child(atmosphere)
 	build_game_ui()
 	build_menu()
+	build_reader()
 
 func style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 9) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
@@ -132,8 +147,8 @@ func build_game_ui() -> void:
 	message_label.add_theme_color_override("font_shadow_color", Color("102b32"))
 	message_label.add_theme_constant_override("shadow_offset_x", 2)
 	message_label.add_theme_constant_override("shadow_offset_y", 2)
-	text(game_ui, "WASD ходить  ·  Shift бег  ·  E действие  ·  F фонарь  ·  R еда  ·  Esc меню", Rect2(32, 880, 1000, 18), 11, MUTED)
-	text(game_ui, "O обзор  ·  N день / ночь", Rect2(1175, 880, 250, 18), 11, MUTED)
+	text(game_ui, "WASD ходить  ·  Shift бег  ·  E действие  ·  F фонарь  ·  R еда  ·  J журнал  ·  Esc меню", Rect2(32, 880, 1050, 18), 11, MUTED)
+	text(game_ui, "O обзор  ·  N ночь  ·  V погода", Rect2(1132, 880, 276, 18), 11, MUTED)
 	danger = ColorRect.new()
 	danger.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	danger.color = Color(0.5, 0.05, 0.03, 0)
@@ -186,6 +201,8 @@ func build_menu() -> void:
 	show_menu("title")
 
 func show_menu(mode: String) -> void:
+	if is_instance_valid(reader):
+		reader.hide()
 	menu.show()
 	game_ui.hide()
 	save_button.visible = mode == "pause"
@@ -209,13 +226,51 @@ func show_menu(mode: String) -> void:
 		start_button.text = "Начать смену"
 
 func show_game() -> void:
+	if is_instance_valid(reader):
+		reader.hide()
 	menu.hide()
 	game_ui.show()
+
+func build_reader() -> void:
+	reader = Control.new()
+	reader.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(reader)
+	var shade := ColorRect.new()
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.025, 0.07, 0.09, 0.72)
+	reader.add_child(shade)
+	panel(reader, Rect2(330, 167, 780, 566), Color("d9d0b4"))
+	text(reader, "ОСТРОВ СЕВЕРНЫЙ    /    ЛИЧНЫЕ ЗАПИСИ", Rect2(368, 197, 700, 23), 12, Color("72735e"))
+	reader_title = text(reader, "", Rect2(368, 245, 700, 57), 32, INK)
+	var serif := SystemFont.new()
+	serif.font_names = PackedStringArray(["Georgia", "Noto Serif"])
+	reader_title.add_theme_font_override("font", serif)
+	reader_text = text(reader, "", Rect2(368, 321, 700, 288), 20, Color("30484a"))
+	reader_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	reader_text.add_theme_constant_override("line_spacing", 5)
+	reader_count = text(reader, "", Rect2(368, 625, 550, 24), 12, Color("72735e"))
+	previous_page = make_button(reader, "←", Vector2(1018, 618), func(): game.turn_journal_page(-1))
+	previous_page.size = Vector2(32, 32)
+	next_page = make_button(reader, "→", Vector2(1060, 618), func(): game.turn_journal_page(1))
+	next_page.size = Vector2(32, 32)
+	var close_button := make_button(reader, "Вернуться на остров  ·  E / Esc", Vector2(368, 668), func(): game.close_journal(), true)
+	close_button.size = Vector2(410, 42)
+	reader.hide()
+
+func show_journal(title_content: String, body: String, count: String) -> void:
+	menu.hide()
+	game_ui.hide()
+	reader.show()
+	reader_title.text = title_content
+	reader_text.text = body
+	reader_count.text = count
+	previous_page.visible = game.journal_entries.size() > 1
+	next_page.visible = game.journal_entries.size() > 1
 
 func refresh() -> void:
 	var minutes := int(game.hour * 60) % 1440
 	clock_label.text = "ДЕНЬ %02d    %02d:%02d" % [game.day, minutes / 60, minutes % 60]
-	status_label.text = "НОЧЬ · ДЕРЖИТЕСЬ СВЕТА" if game.is_night() else "ПАСМУРНО · ВЕТЕР С МОРЯ"
+	status_label.text = ("НОЧЬ · ДОЖДЬ" if game.coastal_life.rain_strength > 0.2 else "НОЧЬ · ДЕРЖИТЕСЬ СВЕТА") if game.is_night() else game.coastal_life.weather_label()
 	var a := "✓" if game.fuel_found else "○"
 	var b := "✓" if game.lighthouse_on else "○"
 	var c := "✓" if game.barricade_built else "○"
@@ -234,3 +289,5 @@ func refresh() -> void:
 		prompt_label.text = "[E] " + game.nearest_station.display_name if is_instance_valid(game.nearest_station) else "Исследуйте остров · ◆ места действий"
 	message_label.text = game.message if game.message_time > 0 else ""
 	danger.color.a = maxf(0.0, danger.color.a - get_process_delta_time() * 0.8)
+	atmosphere.material.set_shader_parameter("night", game.coastal_life.night_strength)
+	atmosphere.material.set_shader_parameter("stress", clampf((55 - game.sanity) / 55, 0, 1))

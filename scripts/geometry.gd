@@ -122,11 +122,79 @@ static func tree(parent: Node3D, at: Vector3, size: float, variation: float) -> 
 	root.name = "Pine"
 	root.position = at
 	parent.add_child(root)
-	cylinder(root, "Trunk", Vector3(0, size * 0.8, 0), size * 0.12, size * 1.6, Color("584a3c"), -1, true)
-	for level in 3:
-		var width := size * (0.95 - level * 0.22)
-		var color := Color("284d46").lightened(variation + level * 0.025)
-		cylinder(root, "Needles", Vector3(0, size * (1.35 + level * 0.65), 0), width, size * 1.85, color, 0)
+	root.rotation.y = fmod(absf(at.x * 3.1 + at.z * 1.9), TAU)
+	cylinder(root, "Trunk", Vector3(0, size * 0.85, 0), size * 0.085, size * 1.7, Color("584a3c"), size * 0.045, true)
+	for branch in 5:
+		var angle := branch * 2.4
+		line(root, "BareBranch", Vector3(0, size * 0.8, 0), Vector3(cos(angle) * size * 0.55, size, sin(angle) * size * 0.55), 0.035, Color("584a3c"))
+	for level in 5:
+		var width := size * (0.88 - level * 0.14)
+		var color := Color("31564a").lightened(variation + level * 0.028)
+		var offset := Vector3(sin(level * 2.5) * size * 0.09, size * (1.1 + level * 0.41), cos(level * 2.0) * size * 0.06)
+		var needles := cylinder(root, "WindNeedles", offset, width, size * 1.05, color, 0)
+		needles.mesh.radial_segments = 7
+		needles.rotation.y = level * 0.6
+		needles.rotation.z = sin(level * 1.7 + at.x) * 0.08
+		needles.material_override = foliage_material(color, 0.045)
+	for branch in 4:
+		var angle := branch * 1.57 + 0.5
+		var offset := Vector3(cos(angle) * size * 0.55, size * 1.2, sin(angle) * size * 0.55)
+		var needles := cylinder(root, "OuterBough", offset, size * 0.43, size * 0.85, Color("31594b"), 0)
+		needles.mesh.radial_segments = 6
+		needles.rotation.z = cos(angle) * 0.25
+		needles.material_override = foliage_material(Color("31594b").lightened(variation), 0.06)
+
+static func foliage_material(color: Color, sway: float = 0.07) -> ShaderMaterial:
+	var key := "foliage" + color.to_html() + str(sway)
+	if materials.has(key):
+		return materials[key]
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/foliage.gdshader")
+	mat.set_shader_parameter("leaf_color", color)
+	mat.set_shader_parameter("sway", sway)
+	materials[key] = mat
+	return mat
+
+static func shrub(parent: Node3D, at: Vector3, size: float, color: Color) -> void:
+	var root := Node3D.new()
+	root.name = "CoastalShrub"
+	root.position = at
+	parent.add_child(root)
+	for index in 5:
+		var angle := index * 2.4
+		var leaves := sphere(root, "Leaves", Vector3(cos(angle) * size * 0.24, size * (0.3 + index * 0.04), sin(angle) * size * 0.24), Vector3(size * 0.7, size * 0.6, size * 0.65), color)
+		leaves.material_override = foliage_material(color.lightened(index * 0.015))
+
+static func barrel(parent: Node3D, at: Vector3, size: float = 1.0) -> void:
+	var root := Node3D.new()
+	root.name = "TimberBarrel"
+	root.position = at
+	root.scale = Vector3.ONE * size
+	parent.add_child(root)
+	cylinder(root, "Staves", Vector3(0, 0.5, 0), 0.37, 1.0, Color("8a7653"), 0.34, true)
+	for y in [0.15, 0.8]:
+		cylinder(root, "IronHoop", Vector3(0, y, 0), 0.38, 0.07, Color("415052"))
+	for index in 10:
+		var angle := index * TAU / 10
+		line(root, "PlankSeam", Vector3(cos(angle) * 0.365, 0.03, sin(angle) * 0.365), Vector3(cos(angle) * 0.34, 0.97, sin(angle) * 0.34), 0.009, Color("594f3c"))
+	cylinder(root, "Lid", Vector3(0, 1.01, 0), 0.33, 0.035, Color("a58d64"))
+
+static func rope_coil(parent: Node3D, at: Vector3, radius: float = 0.35) -> void:
+	var root := Node3D.new()
+	root.name = "RopeCoil"
+	root.position = at
+	parent.add_child(root)
+	for index in 3:
+		var node := MeshInstance3D.new()
+		var mesh := TorusMesh.new()
+		mesh.inner_radius = radius * (0.35 + index * 0.2)
+		mesh.outer_radius = mesh.inner_radius + 0.045
+		mesh.rings = 16
+		mesh.ring_segments = 6
+		node.mesh = mesh
+		node.material_override = material(Color("b49e78"))
+		node.position.y = index * 0.015
+		root.add_child(node)
 
 static func crate(parent: Node3D, at: Vector3, scale_factor: float = 1.0) -> void:
 	var root := Node3D.new()

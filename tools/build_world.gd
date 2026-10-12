@@ -6,6 +6,7 @@ const STATION = preload("res://scripts/interactable.gd")
 const BEACON = preload("res://scripts/beacon.gd")
 const PLAYER = preload("res://scripts/player.gd")
 const SHADOW = preload("res://scripts/shadow.gd")
+const COASTAL_LIFE = preload("res://scripts/coastal_life.gd")
 var rng := RandomNumberGenerator.new()
 var world: Node3D
 var land: Node3D
@@ -28,6 +29,8 @@ func build() -> void:
 	make_forest()
 	make_paths()
 	make_props()
+	make_coastal_details()
+	make_ambience()
 	make_lighting()
 	make_characters()
 	set_owners(world, world)
@@ -61,6 +64,13 @@ func make_characters() -> void:
 	Geo.sphere(visual, "Nose", Vector3(0, 1.49, 0.19), Vector3(0.07, 0.075, 0.08), Color("c2a17d"))
 	Geo.cylinder(visual, "WoolCap", Vector3(0, 1.72, 0), 0.22, 0.15, Color("33484c"), 0.16)
 	Geo.box(visual, "Collar", Vector3(0, 1.29, 0.03), Vector3(0.4, 0.12, 0.32), Color("957344"))
+	Geo.box(visual, "CoatPlacket", Vector3(0, 0.98, 0.24), Vector3(0.035, 0.6, 0.025), Color("9e753e"))
+	for y in [0.77, 0.98, 1.17]:
+		Geo.sphere(visual, "CoatButton", Vector3(0, y, 0.264), Vector3(0.035, 0.035, 0.025), Color("405251"))
+	for x in [-0.15, 0.15]:
+		Geo.box(visual, "PocketFlap", Vector3(x, 0.8, 0.22), Vector3(0.13, 0.07, 0.035), Color("be9148"))
+	Geo.line(visual, "SatchelStrap", Vector3(-0.2, 1.28, 0.17), Vector3(0.2, 0.77, 0.2), 0.025, Color("625641"))
+	Geo.cylinder(visual, "CapBrim", Vector3(0, 1.67, 0), 0.23, 0.07, Color("2c4147"))
 	for side in [-1, 1]:
 		var leg := Node3D.new()
 		leg.name = "LeftLeg" if side == -1 else "RightLeg"
@@ -75,7 +85,16 @@ func make_characters() -> void:
 		Geo.cylinder(arm, "Sleeve", Vector3(0, -0.2, 0), 0.1, 0.45, Color("bd8f40"))
 		Geo.sphere(arm, "Hand", Vector3(0, -0.43, 0), Vector3(0.15, 0.17, 0.16), Color("c7a784"))
 	Geo.box(visual, "Satchel", Vector3(0, 1, -0.25), Vector3(0.35, 0.45, 0.2), Color("645642"))
-	Geo.cylinder(visual, "LanternCage", Vector3(0.4, 0.59, 0.07), 0.11, 0.23, Color("efc073"), -1, false, 1.0)
+	var lantern := Node3D.new()
+	lantern.name = "LanternRig"
+	lantern.position = Vector3(0, -0.64, 0.08)
+	visual.get_node("RightArm").add_child(lantern)
+	Geo.cylinder(lantern, "LanternGlass", Vector3.ZERO, 0.11, 0.22, Color("efc073"), -1, false, 1.0)
+	for y in [-0.14, 0.14]:
+		Geo.cylinder(lantern, "LanternRim", Vector3(0, y, 0), 0.14, 0.055, Color("36484b"))
+	for x in [-0.11, 0.11]:
+		Geo.line(lantern, "CageBar", Vector3(x, -0.12, 0), Vector3(x, 0.2, 0), 0.014, Color("36484b"))
+	Geo.line(lantern, "Handle", Vector3(-0.11, 0.2, 0), Vector3(0.11, 0.2, 0), 0.014, Color("36484b"))
 	var lamp := OmniLight3D.new()
 	lamp.name = "HandLantern"
 	lamp.position = Vector3(0, 1.2, 0.2)
@@ -149,8 +168,6 @@ func make_terrain() -> void:
 	world.add_child(water)
 	var sand_verts := PackedVector3Array()
 	var sand_colors := PackedColorArray()
-	var grass_verts := PackedVector3Array()
-	var grass_colors := PackedColorArray()
 	var cliffs := PackedVector3Array()
 	var cliff_colors := PackedColorArray()
 	var collision_points := PackedVector3Array()
@@ -159,10 +176,7 @@ func make_terrain() -> void:
 		var b := TAU * (index + 1) / 72.0
 		var outer_a := edge(a, 21.5, 17.5)
 		var outer_b := edge(b, 21.5, 17.5)
-		var inner_a := edge(a, 18.9, 14.7) + Vector3(0, 0.035, 0)
-		var inner_b := edge(b, 18.9, 14.7) + Vector3(0, 0.035, 0)
 		append_triangle(sand_verts, sand_colors, Vector3(0, 1, 0), outer_b, outer_a, Color("89846a").lightened(rng.randf_range(-0.04, 0.04)))
-		append_triangle(grass_verts, grass_colors, Vector3(0, 1.035, 0), inner_b, inner_a, Color("4d6556").lightened(rng.randf_range(-0.025, 0.025)))
 		var low_a := Vector3(outer_a.x * 1.025, -0.8, outer_a.z * 1.025)
 		var low_b := Vector3(outer_b.x * 1.025, -0.8, outer_b.z * 1.025)
 		append_triangle(cliffs, cliff_colors, outer_a, outer_b, low_a, Color("59656a").lightened(rng.randf_range(-0.06, 0.06)))
@@ -174,17 +188,42 @@ func make_terrain() -> void:
 			stone_pos.y = 0.35
 			Geo.rock(land, stone_pos, Vector3(rng.randf_range(1.4, 3.0), 1.5, rng.randf_range(1.2, 2.6)), Color("59666c"), a)
 	Geo.triangle_surface(land, "SandShore", sand_verts, sand_colors)
-	Geo.triangle_surface(land, "Grassland", grass_verts, grass_colors)
+	make_grassland()
 	Geo.triangle_surface(land, "Cliffs", cliffs, cliff_colors)
 	var shape := ConvexPolygonShape3D.new()
 	shape.points = collision_points
 	Geo.collider(land, shape)
-	for index in 36:
-		var a := TAU * index / 36.0
-		var pos := edge(a, 23.1, 18.8)
-		pos.y = 0.035
-		var foam := Geo.box(world, "SeaFoam", pos, Vector3(rng.randf_range(1.0, 2.7), 0.025, 0.13), Color("a4c5c2"))
-		foam.rotation.y = -a + PI * 0.5
+
+func make_grassland() -> void:
+	# Мелкая нерегулярная сетка вместо огромных треугольников от центра острова.
+	var points := PackedVector2Array()
+	var outline := PackedVector2Array()
+	for index in 72:
+		var at := edge(TAU * index / 72.0, 18.9, 14.7)
+		outline.append(Vector2(at.x, at.z))
+	points.append_array(outline)
+	for x in 17:
+		for z in 13:
+			var at := Vector2(-17.6 + x * 2.2 + rng.randf_range(-0.4, 0.4), -13.2 + z * 2.2 + rng.randf_range(-0.4, 0.4))
+			if Geometry2D.is_point_in_polygon(at, outline):
+				points.append(at)
+	var indices := Geometry2D.triangulate_delaunay(points)
+	var verts := PackedVector3Array()
+	var colors := PackedColorArray()
+	for index in range(0, indices.size(), 3):
+		var a := Vector3(points[indices[index]].x, 1.035, points[indices[index]].y)
+		var b := Vector3(points[indices[index + 1]].x, 1.035, points[indices[index + 1]].y)
+		var c := Vector3(points[indices[index + 2]].x, 1.035, points[indices[index + 2]].y)
+		var center := (a + b + c) / 3
+		if not Geometry2D.is_point_in_polygon(Vector2(center.x, center.z), outline):
+			continue
+		if (b - a).cross(c - a).y < 0:
+			var swap := b
+			b = c
+			c = swap
+		var variation := sin(center.x * 0.26) * cos(center.z * 0.35) * 0.022 + rng.randf_range(-0.007, 0.007)
+		append_triangle(verts, colors, a, b, c, Color("4d6556").lightened(variation))
+	Geo.triangle_surface(land, "Grassland", verts, colors)
 
 func append_triangle(verts: PackedVector3Array, colors: PackedColorArray, a: Vector3, b: Vector3, c: Vector3, color: Color) -> void:
 	verts.append_array(PackedVector3Array([a, b, c]))
@@ -258,15 +297,26 @@ func make_cabin(at: Vector3) -> void:
 	Geo.box(cabin, "TimberWalls", Vector3(0, 1.6, 0), Vector3(5.7, 2.8, 4.2), Color("6c7c70"), true)
 	for index in 14:
 		Geo.box(cabin, "FrontCladding", Vector3(-2.67 + index * 0.41, 1.6, 2.12), Vector3(0.05, 2.6, 0.06), Color("4d625c"))
+	for index in 11:
+		Geo.box(cabin, "SideCladding", Vector3(2.87, 0.4 + index * 0.24, 0), Vector3(0.035, 0.025, 4.15), Color("52675e"))
 	for x in [-2.8, 2.8]:
 		Geo.box(cabin, "CornerBeam", Vector3(x, 1.6, 2.15), Vector3(0.17, 2.9, 0.17), Color("c2b28d"))
 	Geo.box(cabin, "Door", Vector3(0, 1.25, 2.18), Vector3(0.95, 2.1, 0.12), Color("354a4c"))
+	for x in [-0.58, 0.58]:
+		Geo.box(cabin, "DoorFrame", Vector3(x, 1.32, 2.24), Vector3(0.13, 2.35, 0.18), Color("baaa82"))
+	Geo.box(cabin, "DoorLintel", Vector3(0, 2.5, 2.24), Vector3(1.3, 0.14, 0.18), Color("baaa82"))
+	Geo.sphere(cabin, "BrassDoorHandle", Vector3(0.34, 1.18, 2.3), Vector3(0.08, 0.08, 0.05), Color("c7ad69"))
 	Geo.box(cabin, "DoorGlass", Vector3(0, 1.65, 2.26), Vector3(0.48, 0.65, 0.05), Color("edba72"), false, 0.8)
 	for x in [-1.72, 1.72]:
 		Geo.box(cabin, "WindowFrame", Vector3(x, 1.65, 2.19), Vector3(1.04, 1.0, 0.15), Color("c2b28d"))
 		Geo.box(cabin, "WarmWindow", Vector3(x, 1.65, 2.29), Vector3(0.85, 0.82, 0.05), Color("e6b46d"), false, 1.1)
 		Geo.box(cabin, "WindowMullion", Vector3(x, 1.65, 2.33), Vector3(0.07, 0.85, 0.04), Color("524e3d"))
 		Geo.box(cabin, "WindowMullion", Vector3(x, 1.65, 2.33), Vector3(0.85, 0.07, 0.04), Color("524e3d"))
+		Geo.box(cabin, "WindowSill", Vector3(x, 1.1, 2.32), Vector3(1.23, 0.12, 0.35), Color("ae9e78"))
+		for side in [-1, 1]:
+			Geo.box(cabin, "WindowShutter", Vector3(x + side * 0.76, 1.64, 2.21), Vector3(0.39, 1.06, 0.13), Color("3f5952"))
+			for y in [1.3, 1.95]:
+				Geo.box(cabin, "ShutterHinge", Vector3(x + side * 0.76, y, 2.29), Vector3(0.33, 0.045, 0.04), Color("243f43"))
 	var roof_color := Color("42575c")
 	for side in [-1.0, 1.0]:
 		var roof := Geo.box(cabin, "PitchedRoof", Vector3(0, 3.5, side * 1.15), Vector3(6.7, 0.18, 2.75), roof_color)
@@ -348,11 +398,19 @@ func make_dock() -> void:
 	Geo.line(land, "FishingRod", Vector3(23.8, 1.1, 4.7), Vector3(26.4, 2.4, 5.1), 0.035, Color("7a684b"))
 	Geo.line(land, "FishingLine", Vector3(26.4, 2.4, 5.1), Vector3(26.7, 0.15, 5.1), 0.008, Color("c4cec0"))
 	# Небольшая рыбацкая лодка рядом с причалом.
-	var boat_at := Vector3(23.5, 0.15, 8)
-	Geo.sphere(land, "BoatHull", boat_at, Vector3(3.7, 0.7, 1.5), Color("5e756e"))
-	Geo.box(land, "BoatInside", boat_at + Vector3(0, 0.3, 0), Vector3(2.6, 0.13, 0.85), Color("354f52"))
+	var boat := Node3D.new()
+	boat.name = "FishingBoat"
+	boat.position = Vector3(23.5, 0.15, 8)
+	land.add_child(boat)
+	Geo.sphere(boat, "BoatHull", Vector3.ZERO, Vector3(3.7, 0.7, 1.5), Color("6c8172"))
+	Geo.box(boat, "BoatInside", Vector3(0, 0.3, 0), Vector3(2.6, 0.13, 0.85), Color("354f52"))
 	for x in [-0.7, 0.7]:
-		Geo.box(land, "BoatSeat", boat_at + Vector3(x, 0.4, 0), Vector3(0.35, 0.1, 1.1), Color("ac9672"))
+		Geo.box(boat, "BoatSeat", Vector3(x, 0.4, 0), Vector3(0.35, 0.1, 1.1), Color("ac9672"))
+	Geo.line(boat, "OarShaft", Vector3(-1.25, 0.5, -0.6), Vector3(1.0, 0.5, 0.5), 0.035, Color("ac9672"))
+	var blade := Geo.box(boat, "OarBlade", Vector3(1.1, 0.5, 0.55), Vector3(0.6, 0.06, 0.23), Color("ac9672"))
+	blade.rotation.y = -0.45
+	Geo.rope_coil(dock, Vector3(3.3, 0.13, 0.55))
+	Geo.barrel(dock, Vector3(0.7, 0.13, -0.5), 0.65)
 
 func make_forest() -> void:
 	var positions := [
@@ -390,8 +448,17 @@ func path(points: Array) -> void:
 	for index in points.size() - 1:
 		var start: Vector3 = points[index]
 		var end: Vector3 = points[index + 1]
-		var segment := Geo.box(land, "Footpath", (start + end) * 0.5, Vector3(1.15, 0.018, start.distance_to(end)), Color("96957b"))
-		segment.rotation.y = atan2(end.x - start.x, end.z - start.z)
+		var side := (end - start).normalized().cross(Vector3.UP)
+		var verts := PackedVector3Array()
+		var colors := PackedColorArray()
+		for step in 4:
+			var a := start.lerp(end, float(step) / 4)
+			var b := start.lerp(end, float(step + 1) / 4)
+			var width := rng.randf_range(0.52, 0.72)
+			var color := Color("92917a").lightened(rng.randf_range(-0.035, 0.025))
+			append_triangle(verts, colors, a + side * width, b - side * width, a - side * width, color)
+			append_triangle(verts, colors, a + side * width, b + side * width, b - side * width, color)
+		Geo.triangle_surface(land, "WornFootpath", verts, colors)
 		for pebble_index in 6:
 			var at := start.lerp(end, rng.randf()) + Vector3(rng.randf_range(-0.6, 0.6), 0.02, rng.randf_range(-0.4, 0.4))
 			Geo.sphere(land, "PathPebble", at, Vector3(0.15, 0.05, 0.1), Color("b1ac8d"))
@@ -422,6 +489,126 @@ func add_lamp(at: Vector3) -> void:
 	light.omni_range = 6.5
 	world.add_child(light)
 
+func make_coastal_details() -> void:
+	var details := Node3D.new()
+	details.name = "CoastalDetails"
+	land.add_child(details)
+	for at in [Vector3(-13, 1, 5), Vector3(-10, 1, 11), Vector3(-3, 1, 11), Vector3(8, 1, -11), Vector3(14, 1, -6), Vector3(12, 1, 10), Vector3(-15, 1, -4), Vector3(-5, 1, -11), Vector3(10, 1, 9), Vector3(16, 1, 1), Vector3(-8, 1, 3), Vector3(1, 1, -9)]:
+		Geo.shrub(details, at, rng.randf_range(0.8, 1.6), Color("52765b").lightened(rng.randf_range(-0.06, 0.04)))
+	for index in 35:
+		var angle := rng.randf() * TAU
+		var at := edge(angle, rng.randf_range(19.2, 20.8), rng.randf_range(15.1, 16.8))
+		Geo.rock(details, at, Vector3(0.3, 0.2, 0.2) * rng.randf_range(0.5, 1.5), Color("b0aa8a"), angle)
+	for index in 18:
+		var at := Vector3(rng.randf_range(-8, -1), 1.05, rng.randf_range(8.5, 11.2))
+		Geo.cylinder(details, "WildflowerStem", at + Vector3(0, 0.15, 0), 0.012, 0.3, Color("6c825b"))
+		Geo.sphere(details, "Wildflower", at + Vector3(0, 0.31, 0), Vector3(0.09, 0.07, 0.09), Color("c4b69c") if index % 3 else Color("b4a7b1"))
+	# Выброшенные морем ветки на песке.
+	for index in 6:
+		var at := edge(0.45 + index * 0.19, 20.2, 16.3)
+		var driftwood := Geo.cylinder(details, "BeachDriftwood", at + Vector3(0, 0.1, 0), 0.09, rng.randf_range(0.7, 1.7), Color("aaa084"))
+		driftwood.rotation_degrees = Vector3(90, index * 29, 0)
+	# Дрова, колун и инструменты рядом с лесной точкой.
+	Geo.cylinder(details, "ChoppingBlock", Vector3(-6.1, 1.25, 5.1), 0.45, 0.5, Color("796247"), 0.4, true)
+	Geo.cylinder(details, "StumpRings", Vector3(-6.1, 1.51, 5.1), 0.38, 0.025, Color("b49b6a"))
+	Geo.line(details, "AxeHandle", Vector3(-6.1, 1.5, 5.1), Vector3(-6.1, 2.15, 5.45), 0.035, Color("ae9160"))
+	Geo.box(details, "AxeHead", Vector3(-6.1, 1.6, 5.12), Vector3(0.42, 0.2, 0.08), Color("76817c"))
+	Geo.barrel(details, Vector3(8.6, 1, -1.5))
+	Geo.barrel(details, Vector3(11.8, 1, -6.3), 0.85)
+	Geo.rope_coil(details, Vector3(8.6, 2.05, -1.5), 0.26)
+	Geo.rope_coil(details, Vector3(11.4, 1.05, -4.6))
+	# Радио доступно снаружи, у западной стены хижины.
+	Geo.box(details, "RadioTable", Vector3(1, 1.75, 0.1), Vector3(1.5, 0.12, 0.8), Color("8f7954"), true)
+	for x in [0.4, 1.6]:
+		Geo.box(details, "RadioTableLeg", Vector3(x, 1.35, 0.1), Vector3(0.12, 0.7, 0.65), Color("6e5e46"))
+	Geo.box(details, "CoastRadio", Vector3(1, 2.05, 0.1), Vector3(0.85, 0.5, 0.42), Color("52625c"))
+	Geo.box(details, "RadioSpeaker", Vector3(0.8, 2.05, 0.32), Vector3(0.35, 0.32, 0.025), Color("263f43"))
+	for index in 5:
+		Geo.box(details, "SpeakerSlit", Vector3(0.8, 1.94 + index * 0.055, 0.34), Vector3(0.29, 0.012, 0.01), Color("8d9a84"))
+	Geo.box(details, "RadioDial", Vector3(1.2, 2.12, 0.33), Vector3(0.23, 0.1, 0.02), Color("debf7d"), false, 0.7)
+	Geo.line(details, "RadioAntenna", Vector3(1.3, 2.3, 0.1), Vector3(1.55, 3.05, 0.1), 0.013, Color("abb9b0"))
+	station("radio", "Радио · принять сигнал", Vector3(0.3, 1, 0.8))
+	# Огород и запас досок делают хижину обжитой.
+	for index in 5:
+		Geo.box(details, "StackedTimber", Vector3(7.8, 1.15 + index * 0.13, -3.3), Vector3(2.6, 0.11, 0.28), Color("927e59"))
+	for z in [-2.1, -3.2]:
+		Geo.box(details, "GardenBed", Vector3(3.4, 1.06, z), Vector3(2.2, 0.08, 0.7), Color("4d5140"))
+		for index in 5:
+			Geo.shrub(details, Vector3(2.55 + index * 0.42, 1.1, z), 0.35, Color("69855b"))
+	var lighthouse := world.get_node("IslandGeometry/Lighthouse")
+	Geo.line(lighthouse, "WeatherVanePole", Vector3(0, 13.05, 0), Vector3(0, 14.1, 0), 0.035, Color("41575a"))
+	Geo.line(lighthouse, "WeatherVaneArrow", Vector3(-0.6, 13.9, 0), Vector3(0.6, 13.9, 0), 0.035, Color("41575a"))
+	var flag := Geo.box(lighthouse, "VaneTail", Vector3(0.45, 13.9, 0), Vector3(0.25, 0.25, 0.04), Color("627874"))
+	flag.rotation.z = 0.4
+	for x in [-12.5, -11.1, -9.7]:
+		Geo.cylinder(details, "CliffFencePost", Vector3(x, 1.6, -10.8), 0.07, 1.2, Color("847b60"))
+	Geo.line(details, "CliffFenceRope", Vector3(-12.5, 2, -10.8), Vector3(-9.7, 2, -10.8), 0.025, Color("b2a17c"))
+
+func make_ambience() -> void:
+	var life := Node3D.new()
+	life.name = "CoastalLife"
+	life.set_script(COASTAL_LIFE)
+	world.add_child(life)
+	var gulls := Node3D.new()
+	gulls.name = "Gulls"
+	life.add_child(gulls)
+	for index in 3:
+		var bird := Node3D.new()
+		bird.name = "Gull" + str(index)
+		gulls.add_child(bird)
+		Geo.sphere(bird, "Body", Vector3.ZERO, Vector3(0.14, 0.12, 0.4), Color("d0d1ba"))
+		for side in [-1, 1]:
+			var wing := Node3D.new()
+			wing.name = "LeftWing" if side == -1 else "RightWing"
+			bird.add_child(wing)
+			Geo.triangle_surface(wing, "FlightFeathers", PackedVector3Array([Vector3.ZERO, Vector3(side * 0.62, 0.05, -0.02), Vector3(side * 0.27, 0, -0.22)]), PackedColorArray([Color("d0d1ba"), Color("7c918d"), Color("d0d1ba")]))
+		Geo.sphere(bird, "Beak", Vector3(0, 0, 0.22), Vector3(0.06, 0.06, 0.12), Color("d3bb79"))
+	var rain := CPUParticles3D.new()
+	rain.name = "Rain"
+	rain.position.y = 13
+	rain.emitting = false
+	rain.amount = 420
+	rain.lifetime = 1.6
+	rain.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	rain.emission_box_extents = Vector3(27, 0.1, 21)
+	rain.direction = Vector3(-0.2, -1, 0.08)
+	rain.spread = 3
+	rain.gravity = Vector3(0, -2, 0)
+	rain.initial_velocity_min = 8
+	rain.initial_velocity_max = 10
+	var raindrop := BoxMesh.new()
+	raindrop.size = Vector3(0.014, 0.65, 0.014)
+	rain.mesh = raindrop
+	var rain_mat := StandardMaterial3D.new()
+	rain_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rain_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rain_mat.albedo_color = Color(0.65, 0.8, 0.82, 0.0)
+	rain.material_override = rain_mat
+	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	life.add_child(rain)
+	var motes := CPUParticles3D.new()
+	motes.name = "NightMotes"
+	motes.position = Vector3(-3, 2, 6)
+	motes.emitting = false
+	motes.amount = 24
+	motes.lifetime = 5
+	motes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	motes.emission_box_extents = Vector3(10, 0.5, 5)
+	motes.direction = Vector3.UP
+	motes.spread = 180
+	motes.gravity = Vector3.ZERO
+	motes.initial_velocity_min = 0.05
+	motes.initial_velocity_max = 0.2
+	var mote := SphereMesh.new()
+	mote.radius = 0.025
+	mote.height = 0.05
+	mote.radial_segments = 6
+	mote.rings = 3
+	motes.mesh = mote
+	motes.material_override = Geo.material(Color("b9c29b"), 1.0)
+	motes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	life.add_child(motes)
+
 func station(id: String, title: String, at: Vector3, remaining: int = -1) -> void:
 	var area := Area3D.new()
 	area.name = "Station_" + id
@@ -447,6 +634,19 @@ func station(id: String, title: String, at: Vector3, remaining: int = -1) -> voi
 	marker.modulate = Color("e3bb76")
 	marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	area.add_child(marker)
+	var ring := MeshInstance3D.new()
+	ring.name = "SelectionRing"
+	var ring_mesh := TorusMesh.new()
+	ring_mesh.inner_radius = 0.64
+	ring_mesh.outer_radius = 0.69
+	ring_mesh.rings = 32
+	ring_mesh.ring_segments = 6
+	ring.mesh = ring_mesh
+	ring.position.y = 0.08
+	ring.material_override = Geo.material(Color("e4c485"), 0.5)
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ring.visible = false
+	area.add_child(ring)
 	world.add_child(area)
 
 func make_lighting() -> void:

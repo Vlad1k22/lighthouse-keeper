@@ -44,42 +44,42 @@ radial_segments = 12
 [sub_resource type="BoxMesh" id="BoxMesh_jfb8u"]
 size = Vector3(0.045, 0.035, 0.03)
 
-[node name="NightShadow" type="CharacterBody3D" unique_id=1338138535]
+[node name="NightShadow" type="CharacterBody3D" unique_id=1741477672]
 collision_layer = 4
 script = ExtResource("1_0rvn4")
 
-[node name="@CollisionShape3D@476" type="CollisionShape3D" parent="." unique_id=220902625]
+[node name="@CollisionShape3D@863" type="CollisionShape3D" parent="." unique_id=1788503065]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 shape = SubResource("CapsuleShape3D_6b2k5")
 
-[node name="Visual" type="Node3D" parent="." unique_id=1518682164]
+[node name="Visual" type="Node3D" parent="." unique_id=1901108704]
 
-[node name="Silhouette" type="MeshInstance3D" parent="Visual" unique_id=898788171]
+[node name="Silhouette" type="MeshInstance3D" parent="Visual" unique_id=593059157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_bs2fw")
 
-[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=983514185]
+[node name="Head" type="MeshInstance3D" parent="Visual" unique_id=301073462]
 transform = Transform3D(0.36, 0, 0, 0, 0.48, 0, 0, 0, 0.34, 0, 1.93, 0)
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("SphereMesh_fvdbd")
 
-[node name="Arm" type="MeshInstance3D" parent="Visual" unique_id=1173810192]
+[node name="Arm" type="MeshInstance3D" parent="Visual" unique_id=457789718]
 transform = Transform3D(-0.74422085, -0.29049417, 0.60145545, 0.29049417, -0.95161927, -0.1001704, 0.60145545, 0.1001704, 0.7926016, -0.355, 0.825, 0.05)
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_arb4i")
 
-[node name="Eye" type="MeshInstance3D" parent="Visual" unique_id=1341787833]
+[node name="Eye" type="MeshInstance3D" parent="Visual" unique_id=341307375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 1.99, 0.15)
 material_override = SubResource("StandardMaterial3D_tkqwg")
 mesh = SubResource("BoxMesh_kimjs")
 
-[node name="@MeshInstance3D@477" type="MeshInstance3D" parent="Visual" unique_id=674695981]
+[node name="@MeshInstance3D@864" type="MeshInstance3D" parent="Visual" unique_id=1406228028]
 transform = Transform3D(-0.74422085, 0.29049417, -0.60145545, -0.29049417, -0.95161927, -0.1001704, -0.60145545, 0.1001704, 0.7926016, 0.355, 0.825, 0.05)
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_piu8t")
 
-[node name="@MeshInstance3D@478" type="MeshInstance3D" parent="Visual" unique_id=1737558179]
+[node name="@MeshInstance3D@865" type="MeshInstance3D" parent="Visual" unique_id=1151996178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 1.99, 0.15)
 material_override = SubResource("StandardMaterial3D_tkqwg")
 mesh = SubResource("BoxMesh_jfb8u")

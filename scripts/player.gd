@@ -44,6 +44,7 @@ func _physics_process(delta: float) -> void:
 			limb.rotation.x = 0
 	$Visual.position.y = absf(sin(walk_clock * 2)) * 0.035 if moving else 0
 	$HandLantern.visible = lantern_on
+	$Visual/RightArm/LanternRig/LanternGlass.visible = lantern_on
 
 func toggle_lantern() -> void:
 	lantern_on = not lantern_on

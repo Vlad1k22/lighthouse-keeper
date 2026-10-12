@@ -42,9 +42,19 @@ var beacon: Node3D
 var barricade: Node3D
 var capture_path := ""
 var capture_frames := 0
+var coastal_life: Node3D
+var journal_open := false
+var journal_page := 0
+var journal_entries: Array[String] = []
+var camera_shake := 0.0
+const STORIES := {
+	"sign": {"title": "01 / Надпись на тропе", "text": "«Если услышишь шаги за собой — не гаси свет».\n\nБуквы вырезаны неровно, словно кто-то торопился. Под последней строчкой — маленький рисунок маяка.\n\nВы узнаёте этот почерк. Так вы подписывали свои вещи ещё до приезда на остров. Но эту табличку вы видите впервые."},
+	"radio": {"title": "02 / Сигнал с берега", "text": "Частота 104.6. Сквозь треск прорывается голос:\n\n«Северный, ответьте. Последний катер ушёл три недели назад. Больше никто не высаживался на острове. Повторяю: вы там один».\n\nПередача обрывается. На секунду в динамике слышно ваше собственное дыхание — с небольшим опозданием.\n\nКто тогда ходит по лесу после заката?"}
+}
 
 func _ready() -> void:
 	beacon = world.find_child("Lighthouse", true, false)
+	coastal_life = world.get_node("CoastalLife")
 	stations = get_tree().get_nodes_in_group("interactables")
 	sound = Node.new()
 	sound.set_script(SOUND)
@@ -69,6 +79,10 @@ func _ready() -> void:
 		lighthouse_on = true
 		beacon.set_powered(true)
 		notify("Маяк снова горит. Подготовьте убежище к ночи.")
+	elif "--preview-journal" in OS.get_cmdline_user_args():
+		start_shift()
+		overview = true
+		unlock_story("radio")
 	elif "--preview-night" in OS.get_cmdline_user_args():
 		start_shift()
 		overview = true
@@ -78,6 +92,7 @@ func _ready() -> void:
 		barricade_built = true
 		build_barricade()
 		beacon.set_powered(true)
+		coastal_life.rain_strength = 0.7
 	elif "--preview-play" in OS.get_cmdline_user_args():
 		start_shift()
 		hour = 18.3
@@ -100,7 +115,8 @@ func _ready() -> void:
 func start_shift() -> void:
 	if playing and paused and not finished:
 		paused = false
-		player.enabled = true
+		journal_open = false
+		player.enabled = busy_time <= 0
 		hud.show_game()
 		return
 	inventory = {"fuel": 0, "wood": 0, "fish": 0, "food": 1}
@@ -121,6 +137,9 @@ func start_shift() -> void:
 	playing = true
 	paused = false
 	finished = false
+	journal_open = false
+	journal_entries.clear()
+	coastal_life.weather_mode = 0
 	was_night = false
 	night_spawned = false
 	busy_time = 0
@@ -148,6 +167,7 @@ func reset_world_state() -> void:
 func _process(delta: float) -> void:
 	var active := playing and not paused and not finished
 	if active:
+		enemies = enemies.filter(func(enemy): return is_instance_valid(enemy))
 		hour += delta * hours_per_second
 		if hour >= 24:
 			hour -= 24
@@ -179,6 +199,7 @@ func _process(delta: float) -> void:
 			if busy_time <= 0:
 				inventory.fish += 1
 				player.enabled = true
+				feedback(player.position, "+1 РЫБА")
 				notify("Есть улов! Приготовьте рыбу на печи возле хижины.")
 				sound.interact()
 		update_nearest()
@@ -189,6 +210,7 @@ func _process(delta: float) -> void:
 			notify("Течение слишком сильное. Вы вернулись к хижине.")
 	message_time = maxf(0, message_time - delta)
 	update_atmosphere()
+	sound.set_ambience(coastal_life.night_strength, coastal_life.rain_strength)
 	update_camera(delta)
 	hud.refresh()
 	if not capture_path.is_empty():
@@ -207,6 +229,13 @@ func update_camera(delta: float) -> void:
 	camera.position = camera_focus + Vector3(29, 34, 40)
 	camera.look_at(camera_focus)
 	camera.size = camera_zoom
+	if camera_shake > 0:
+		camera_shake = maxf(0, camera_shake - delta * 1.8)
+		camera.h_offset = sin(Time.get_ticks_msec() * 0.04) * camera_shake * 0.12
+		camera.v_offset = cos(Time.get_ticks_msec() * 0.033) * camera_shake * 0.08
+	else:
+		camera.h_offset = 0
+		camera.v_offset = 0
 
 func update_atmosphere() -> void:
 	var night := 0.0
@@ -215,15 +244,16 @@ func update_atmosphere() -> void:
 	elif hour < 7:
 		night = 1.0 - smoothstep(5.0, 7.0, hour)
 	var env: Environment = world.get_node("CoastalAtmosphere").environment
-	env.ambient_light_energy = lerpf(0.48, 0.30, night)
+	env.ambient_light_energy = lerpf(0.42, 0.30, night)
 	env.ambient_light_color = Color("adbcba").lerp(Color("638392"), night)
 	env.fog_light_color = Color("819b9c").lerp(Color("1a3949"), night)
 	env.fog_density = lerpf(0.0025, 0.006, night)
 	env.background_color = Color("315d68").lerp(Color("122c3c"), night)
 	var sun: DirectionalLight3D = world.get_node("Sun")
-	sun.light_energy = lerpf(1.0, 0.3, night)
-	sun.light_color = Color("f6dec0").lerp(Color("8dbad2"), night)
+	sun.light_energy = lerpf(0.82, 0.3, night)
+	sun.light_color = Color("e8dfcd").lerp(Color("8dbad2"), night)
 	world.get_node("Ocean").material_override.set_shader_parameter("night_factor", night)
+	coastal_life.night_strength = night
 
 func is_night() -> bool:
 	return hour >= 20 or hour < 6
@@ -239,7 +269,7 @@ func current_objective() -> String:
 	if not lighthouse_on:
 		return "Отнесите топливо к генератору возле маяка."
 	if not barricade_built:
-		return "Соберите 3 дерева в лесу. Затем идите к верстаку."
+		return "Соберите 3 древесины в лесу. Затем идите к верстаку."
 	return "Ночью держитесь света. В хижине можно переждать ночь."
 
 func update_nearest() -> void:
@@ -252,6 +282,8 @@ func update_nearest() -> void:
 		if distance < best:
 			best = distance
 			nearest_station = station
+	for station in stations:
+		station.selected = station == nearest_station
 
 func attempt_interaction(station: Area3D) -> bool:
 	if not playing or paused or finished or busy_time > 0 or not is_instance_valid(station):
@@ -266,6 +298,7 @@ func attempt_interaction(station: Area3D) -> bool:
 			world.find_child("FuelCan", true, false).hide()
 			world.find_child("FuelHandle", true, false).hide()
 			notify("Канистра в рюкзаке. Генератор ждёт возле маяка.")
+			feedback(station.position, "+ ТОПЛИВО")
 		"beacon":
 			if lighthouse_on:
 				notify("Маяк работает. Его свет отгоняет тени.")
@@ -277,10 +310,12 @@ func attempt_interaction(station: Area3D) -> bool:
 			lighthouse_on = true
 			beacon.set_powered(true)
 			notify("Маяк зажжён. Теперь соберите древесину для укрепления.")
+			feedback(station.position, "МАЯК ЗАЖЖЁН")
 		"wood":
 			inventory.wood += 1
 			station.consume()
 			notify("Древесина +1. Для укрепления нужно 3.")
+			feedback(station.position, "+1 ДРЕВЕСИНА")
 		"workbench":
 			if barricade_built:
 				notify("Укрепление готово. Хижина защищает от теней.")
@@ -292,6 +327,7 @@ func attempt_interaction(station: Area3D) -> bool:
 			barricade_built = true
 			build_barricade()
 			notify("Хижина укреплена. Подготовьтесь к ночи: рыба, еда и фонарь.")
+			feedback(station.position, "УКРЫТИЕ ГОТОВО")
 		"fish":
 			busy_time = 3.0
 			player.enabled = false
@@ -303,6 +339,7 @@ func attempt_interaction(station: Area3D) -> bool:
 			inventory.fish -= 1
 			inventory.food += 1
 			notify("Ужин готов. Нажмите R, чтобы поесть.")
+			feedback(station.position, "+1 ЕДА")
 		"shelter":
 			if is_night() and lighthouse_on and barricade_built:
 				hour = 5.85
@@ -313,8 +350,12 @@ func attempt_interaction(station: Area3D) -> bool:
 				sanity = minf(100, sanity + 15)
 				notify("Небольшая передышка. Ночью пригодятся маяк и укрепление.")
 		"note":
-			notify("«Если услышишь шаги за собой — не гаси свет».\nПочерк подозрительно похож на ваш.", 9)
-	sound.interact()
+			unlock_story("sign")
+		"radio":
+			unlock_story("radio")
+			sound.radio_signal()
+	if station.station_id != "radio":
+		sound.interact(station.station_id)
 	interaction_cooldown = 0.35
 	return true
 
@@ -356,6 +397,7 @@ func clear_enemies() -> void:
 func take_damage(amount: float) -> void:
 	health = maxf(0, health - amount)
 	hud.danger.color.a = 0.22
+	camera_shake = 1.0
 	notify("Тень рядом! Включите фонарь или бегите к свету.")
 
 func eat() -> bool:
@@ -373,6 +415,51 @@ func notify(content: String, duration: float = 5.0) -> void:
 	message = content
 	message_time = duration
 
+func feedback(at: Vector3, content: String) -> void:
+	var label := Label3D.new()
+	label.text = content
+	label.position = at + Vector3(0, 2.3, 0)
+	label.font_size = 32
+	label.pixel_size = 0.009
+	label.modulate = Color("ffe0a0")
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	add_child(label)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y + 0.8, 1.1)
+	tween.tween_property(label, "modulate:a", 0.0, 1.1).set_delay(0.2)
+	tween.chain().tween_callback(label.queue_free)
+
+func unlock_story(id: String) -> void:
+	if id not in journal_entries:
+		journal_entries.append(id)
+	journal_page = journal_entries.find(id)
+	open_journal()
+
+func open_journal() -> void:
+	journal_open = true
+	paused = true
+	player.enabled = false
+	refresh_journal()
+
+func refresh_journal() -> void:
+	if journal_entries.is_empty():
+		hud.show_journal("Журнал смотрителя", "На острове слишком тихо.\n\nОсмотрите табличку на тропе к маяку и проверьте радиоприёмник у западной стены хижины. Здесь должны остаться следы тех, кто дежурил до вас.", "НАХОДКИ  /  0 ИЗ 2")
+	else:
+		journal_page = posmod(journal_page, journal_entries.size())
+		var entry: Dictionary = STORIES[journal_entries[journal_page]]
+		hud.show_journal(entry.title, entry.text, "НАХОДКИ  /  %d ИЗ %d" % [journal_page + 1, journal_entries.size()])
+
+func turn_journal_page(direction: int) -> void:
+	journal_page += direction
+	refresh_journal()
+
+func close_journal() -> void:
+	journal_open = false
+	paused = false
+	player.enabled = busy_time <= 0
+	hud.show_game()
+
 func finish_shift(won: bool) -> void:
 	finished = true
 	player.enabled = false
@@ -385,6 +472,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			target_zoom = minf(38, target_zoom + 2)
 	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if journal_open:
+		if event.physical_keycode in [KEY_ESCAPE, KEY_E, KEY_J]:
+			close_journal()
+		elif event.physical_keycode in [KEY_LEFT, KEY_RIGHT]:
+			turn_journal_page(-1 if event.physical_keycode == KEY_LEFT else 1)
+		get_viewport().set_input_as_handled()
 		return
 	if event.physical_keycode == KEY_ESCAPE and playing and not finished:
 		paused = not paused
@@ -405,6 +499,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			eat()
 		KEY_O:
 			overview = not overview
+		KEY_J:
+			open_journal()
+		KEY_V:
+			coastal_life.cycle_weather()
+			notify("Погода: " + ["автоматически", "дождь", "без дождя"][coastal_life.weather_mode])
 		KEY_N:
 			hour = 17.0 if is_night() else 22.0
 			was_night = false
@@ -417,6 +516,8 @@ func save_game() -> bool:
 	if not playing or finished:
 		return false
 	var state := {"version": 1, "inventory": inventory, "health": health, "hunger": hunger, "sanity": sanity, "hour": hour, "day": day, "fuel_found": fuel_found, "lighthouse_on": lighthouse_on, "barricade_built": barricade_built, "position": [player.position.x, player.position.y, player.position.z], "wood_remaining": 9, "was_night": was_night}
+	state["journal"] = journal_entries
+	state["weather_mode"] = coastal_life.weather_mode
 	for station in stations:
 		if station.station_id == "wood":
 			state.wood_remaining = station.remaining
@@ -450,6 +551,10 @@ func load_game() -> bool:
 	lighthouse_on = bool(state.lighthouse_on)
 	barricade_built = bool(state.barricade_built)
 	was_night = bool(state.get("was_night", false))
+	for entry in state.get("journal", []):
+		if STORIES.has(entry):
+			journal_entries.append(str(entry))
+	coastal_life.weather_mode = int(state.get("weather_mode", 0))
 	player.position = Vector3(state.position[0], state.position[1], state.position[2])
 	beacon.set_powered(lighthouse_on)
 	if barricade_built:
