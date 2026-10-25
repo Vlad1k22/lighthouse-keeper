@@ -7,6 +7,7 @@ const BEACON = preload("res://scripts/beacon.gd")
 const PLAYER = preload("res://scripts/player.gd")
 const SHADOW = preload("res://scripts/shadow.gd")
 const COASTAL_LIFE = preload("res://scripts/coastal_life.gd")
+const OVERHAUL = preload("res://scripts/visual_overhaul.gd")
 var rng := RandomNumberGenerator.new()
 var world: Node3D
 var land: Node3D
@@ -33,6 +34,7 @@ func build() -> void:
 	make_ambience()
 	make_lighting()
 	make_characters()
+	OVERHAUL.apply(world)
 	set_owners(world, world)
 	var packed := PackedScene.new()
 	var result := packed.pack(world)
@@ -139,6 +141,7 @@ func make_characters() -> void:
 	save_character(shadow, "res://scenes/shadow.tscn")
 
 func save_character(character: Node3D, path_name: String) -> void:
+	OVERHAUL.apply(character)
 	set_owners(character, character)
 	var packed := PackedScene.new()
 	packed.pack(character)
@@ -384,7 +387,8 @@ func make_cabin(at: Vector3) -> void:
 func make_dock() -> void:
 	var dock := Node3D.new()
 	dock.name = "FishingDock"
-	dock.position = Vector3(18.0, 0.8, 5)
+	# Верх настила (0.91 + 0.09) совпадает с поверхностью острова на y=1.
+	dock.position = Vector3(18.0, 0.91, 5)
 	land.add_child(dock)
 	for index in 17:
 		Geo.box(dock, "DeckPlank", Vector3(index * 0.42, 0, 0), Vector3(0.39, 0.18, 2.2), Color("857d65").lightened(rng.randf_range(-0.05, 0.04)), true)
@@ -393,7 +397,7 @@ func make_dock() -> void:
 			Geo.cylinder(dock, "TimberPile", Vector3(index * 2.0, -0.2, z), 0.13, 2.2, Color("5d675c"))
 	for z in [-0.9, 0.9]:
 		Geo.line(dock, "Rope", Vector3(0, 0.6, z), Vector3(6, 0.6, z), 0.025, Color("b2a381"))
-	Geo.crate(dock, Vector3(5, 0.1, -0.4), 0.65)
+	Geo.crate(dock, Vector3(5, 0.1, -0.78), 0.65)
 	station("fish", "Причал · ловить рыбу", Vector3(23.3, 0.9, 5))
 	Geo.line(land, "FishingRod", Vector3(23.8, 1.1, 4.7), Vector3(26.4, 2.4, 5.1), 0.035, Color("7a684b"))
 	Geo.line(land, "FishingLine", Vector3(26.4, 2.4, 5.1), Vector3(26.7, 0.15, 5.1), 0.008, Color("c4cec0"))
@@ -410,7 +414,7 @@ func make_dock() -> void:
 	var blade := Geo.box(boat, "OarBlade", Vector3(1.1, 0.5, 0.55), Vector3(0.6, 0.06, 0.23), Color("ac9672"))
 	blade.rotation.y = -0.45
 	Geo.rope_coil(dock, Vector3(3.3, 0.13, 0.55))
-	Geo.barrel(dock, Vector3(0.7, 0.13, -0.5), 0.65)
+	Geo.barrel(dock, Vector3(0.7, 0.13, -0.78), 0.65)
 
 func make_forest() -> void:
 	var positions := [
@@ -654,22 +658,22 @@ func make_lighting() -> void:
 	environment.name = "CoastalAtmosphere"
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("2c4d5c")
+	env.background_color = Color("17282c")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("a8bab9")
-	env.ambient_light_energy = 0.65
+	env.ambient_light_color = Color("9da8a2")
+	env.ambient_light_energy = 0.48
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.fog_enabled = true
-	env.fog_light_color = Color("708e92")
-	env.fog_density = 0.003
+	env.fog_light_color = Color("263435")
+	env.fog_density = 0.0045
 	env.fog_sky_affect = 0
 	environment.environment = env
 	world.add_child(environment)
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.rotation_degrees = Vector3(-38, -42, 0)
-	sun.light_color = Color("ffe0ac")
-	sun.light_energy = 1.25
+	sun.light_color = Color("bac6c2")
+	sun.light_energy = 0.90
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 100
 	world.add_child(sun)

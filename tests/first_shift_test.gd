@@ -46,13 +46,21 @@ func run() -> void:
 	check(interact("workbench") and game.barricade_built and game.inventory.wood == 0, "Barricade consumes three wood and creates geometry")
 	check(game.is_safe(Vector3(5, 1, 3)) and game.is_safe(Vector3(-9, 1, -4)), "Cabin and beacon create safe areas")
 	check(not game.is_safe(Vector3(14, 1, 8)), "Forest remains dangerous at night")
-	check(interact("fish") and game.busy_time > 0 and not game.player.enabled, "Fishing starts timed action")
-	game.busy_time = 0.001
-	await create_timer(0.05).timeout
-	check(game.inventory.fish == 1 and game.player.enabled, "Fishing finishes with one fish")
+	check(interact("fish") and game.fishing.is_open() and not game.player.enabled, "Fishing starts an interactive minigame")
+	while game.fishing.phase == game.FISHING.Phase.WAITING:
+		game.fishing.advance(0.1, false)
+	game.fishing.press_action()
+	for frame in 1800:
+		var f = game.fishing
+		f.advance(1.0 / 60.0, f.bar_position + f.bar_velocity * 0.22 < f.fish_position)
+		if f.phase == game.FISHING.Phase.RESULT:
+			break
+	game.close_fishing()
+	check(game.inventory.fish == 1 and game.player.enabled, "Successful minigame awards one fish and restores movement")
 	check(interact("cook") and game.inventory.fish == 0 and game.inventory.food == 2, "Cooking converts fish to food")
 	game.hunger = 20
-	check(game.eat() and game.hunger == 55, "Food restores hunger and consumes item")
+	var expected_hunger := 20 + int(game.PROVISIONS.bonuses(game.food_items[game.selected_food]).hunger)
+	check(game.eat() and game.hunger == expected_hunger, "Food restores its nutrition value and consumes item")
 	check(interact("note") and game.journal_open and game.paused and not game.player.enabled, "Reading a discovery pauses gameplay")
 	check(game.journal_entries == ["sign"] and game.hud.reader.visible, "Sign unlocks a readable journal entry")
 	var close_key := InputEventKey.new()

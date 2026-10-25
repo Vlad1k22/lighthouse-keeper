@@ -8,7 +8,7 @@ var life_clock := 0.0
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(keeper) or not is_instance_valid(game):
 		return
-	if not game.playing or game.finished or game.paused:
+	if not game.playing or game.finished or game.paused or game.fishing.is_open():
 		return
 	life_clock += delta
 	attack_cooldown -= delta

@@ -1,5 +1,6 @@
 extends CanvasLayer
 const MAP = preload("res://scripts/island_map.gd")
+const FISHING_UI = preload("res://scripts/fishing_ui.gd")
 const INK := Color("102b32")
 const PAPER := Color("e9e3ce")
 const GOLD := Color("deb777")
@@ -12,6 +13,7 @@ var clock_label: Label
 var task_label: Label
 var status_label: Label
 var inventory_label: Label
+var meal_label: Label
 var prompt_label: Label
 var message_label: Label
 var menu_title: Label
@@ -24,7 +26,7 @@ var health_bar: ProgressBar
 var hunger_bar: ProgressBar
 var sanity_bar: ProgressBar
 var stamina_bar: ProgressBar
-var work_bar: ProgressBar
+var fishing_overlay: Control
 var danger: ColorRect
 var atmosphere: ColorRect
 var reader: Control
@@ -50,6 +52,10 @@ func _ready() -> void:
 	build_game_ui()
 	build_menu()
 	build_reader()
+	fishing_overlay = Control.new()
+	fishing_overlay.set_script(FISHING_UI)
+	fishing_overlay.game = game
+	root.add_child(fishing_overlay)
 
 func style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 9) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
@@ -132,16 +138,15 @@ func build_game_ui() -> void:
 	sanity_bar = progress(game_ui, Rect2(332, 815, 118, 8), Color("7da8a3"))
 	stamina_bar = progress(game_ui, Rect2(51, 847, 399, 4), Color("9cbca6"))
 	text(game_ui, "ВЫНОСЛИВОСТЬ", Rect2(51, 828, 160, 15), 9, MUTED)
-	panel(game_ui, Rect2(1017, 775, 391, 96))
-	text(game_ui, "РЮКЗАК", Rect2(1036, 788, 200, 19), 11, GOLD)
-	inventory_label = text(game_ui, "", Rect2(1036, 818, 354, 40), 15)
+	panel(game_ui, Rect2(1017, 727, 391, 144))
+	text(game_ui, "РЮКЗАК", Rect2(1036, 740, 200, 19), 11, GOLD)
+	inventory_label = text(game_ui, "", Rect2(1036, 766, 354, 40), 15)
+	meal_label = text(game_ui, "", Rect2(1036, 815, 354, 43), 12)
 	var prompt_bg := panel(game_ui, Rect2(491, 808, 505, 56))
 	prompt_bg.name = "PromptBackground"
 	prompt_label = text(game_ui, "", Rect2(508, 819, 474, 31), 17)
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	work_bar = progress(game_ui, Rect2(508, 856, 474, 4), GOLD)
-	work_bar.hide()
-	message_label = text(game_ui, "", Rect2(410, 704, 620, 65), 18, GOLD)
+	message_label = text(game_ui, "", Rect2(410, 704, 600, 65), 18, GOLD)
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.add_theme_color_override("font_shadow_color", Color("102b32"))
@@ -280,14 +285,22 @@ func refresh() -> void:
 	sanity_bar.value = game.sanity
 	stamina_bar.value = game.player.stamina
 	inventory_label.text = "Топливо %d   Дерево %d\nРыба %d        Еда %d" % [game.inventory.fuel, game.inventory.wood, game.inventory.fish, game.inventory.food]
-	if game.busy_time > 0:
-		prompt_label.text = "Рыбалка… дождитесь поклёвки"
-		work_bar.show()
-		work_bar.value = (1.0 - game.busy_time / 3.0) * 100
+	if not game.food_items.is_empty():
+		var meal: Dictionary = game.food_items[game.selected_food]
+		var benefit: Dictionary = game.PROVISIONS.bonuses(meal)
+		meal_label.text = "R: %s\n+%d ЗДР · +%d СЫТ · Q — выбор еды" % [game.PROVISIONS.label(meal), benefit.health, benefit.hunger]
+		meal_label.add_theme_color_override("font_color", game.PROVISIONS.rarity_color(meal))
 	else:
-		work_bar.hide()
-		prompt_label.text = "[E] " + game.nearest_station.display_name if is_instance_valid(game.nearest_station) else "Исследуйте остров · ◆ места действий"
+		meal_label.text = "Готовой еды нет. Рыбу можно приготовить на печи."
+	prompt_label.text = "[E] " + game.nearest_station.display_name if is_instance_valid(game.nearest_station) else "Исследуйте остров · ◆ места действий"
+	if is_instance_valid(game.nearest_station) and game.nearest_station.station_id == "cook" and not game.fish_items.is_empty():
+		var raw_fish: Dictionary = game.fish_items[game.selected_fish]
+		prompt_label.text = "[E] %s %d г · [T] выбор" % [raw_fish.name, raw_fish.weight]
+	fishing_overlay.visible = game.fishing.is_open()
+	if fishing_overlay.visible:
+		fishing_overlay.queue_redraw()
 	message_label.text = game.message if game.message_time > 0 else ""
+	message_label.visible = not game.fishing.is_open()
 	danger.color.a = maxf(0.0, danger.color.a - get_process_delta_time() * 0.8)
 	atmosphere.material.set_shader_parameter("night", game.coastal_life.night_strength)
 	atmosphere.material.set_shader_parameter("stress", clampf((55 - game.sanity) / 55, 0, 1))
