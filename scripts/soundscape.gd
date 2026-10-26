@@ -6,6 +6,8 @@ var effect: AudioStreamPlayer
 var rainfall: AudioStreamPlayer
 var drone: AudioStreamPlayer
 var radio: AudioStreamPlayer
+var engine: AudioStreamPlayer
+var horror_cache := {}
 
 func _ready() -> void:
 	sea = AudioStreamPlayer.new()
@@ -27,6 +29,7 @@ func _ready() -> void:
 	radio.stream = noise_stream(0.85, 5)
 	radio.volume_db = -23
 	add_child(radio)
+	engine = looping_player(6,4.0)
 
 func looping_player(kind: int, duration: float) -> AudioStreamPlayer:
 	var audio := AudioStreamPlayer.new()
@@ -39,6 +42,15 @@ func looping_player(kind: int, duration: float) -> AudioStreamPlayer:
 func set_ambience(night: float, rain: float) -> void:
 	rainfall.volume_db = lerpf(-70, -24, rain)
 	drone.volume_db = lerpf(-70, -34, night)
+
+func set_engine(distance: float, running: bool) -> void:
+	engine.volume_db = lerpf(-70,-26,clampf(1-distance/18.0,0,1)) if running else -70.0
+
+func set_story_silence(silent: bool) -> void:
+	sea.volume_db = -65 if silent else -25
+	if silent:
+		rainfall.volume_db = -65
+		drone.volume_db = -70
 
 func noise_stream(duration: float, kind: int) -> AudioStreamWAV:
 	var rate := 22050
@@ -63,6 +75,15 @@ func noise_stream(duration: float, kind: int) -> AudioStreamWAV:
 		elif kind == 4:
 			value = (sin(TAU * t * 110) + sin(TAU * t * 130.833333) * 0.6 + sin(TAU * t * 164.833333) * 0.3) * 0.11
 			value *= 0.8 + sin(TAU * t / duration) * 0.2
+		elif kind == 6:
+			value = (sin(TAU*t*35)*0.2+sin(TAU*t*70)*0.07)*(0.85+sin(TAU*t*6)*0.15)+filtered*0.08
+		elif kind==7:
+			var beat := fmod(t,.23)
+			value = (sin(t*TAU*72)*.55+filtered*.2)*exp(-beat*38)
+		elif kind==8:
+			value = (filtered*.3+sin(t*TAU*163)*.035)*pow(sin(PI*t/duration),2)
+		elif kind==9:
+			value = filtered*.45*(.2+.8*maxf(0,sin(TAU*t*7)))
 		else:
 			value = (filtered * 0.6 + sin(t * TAU * 820) * 0.12) * pow(sin(PI * t / duration), 2)
 		data.encode_s16(index * 2, int(clampf(value, -1, 1) * 32767))
@@ -70,7 +91,7 @@ func noise_stream(duration: float, kind: int) -> AudioStreamWAV:
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = rate
 	stream.data = data
-	if kind in [0, 3, 4]:
+	if kind in [0, 3, 4, 6]:
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		stream.loop_begin = 0
 		stream.loop_end = count
@@ -88,8 +109,21 @@ func interact(kind: String = "") -> void:
 func radio_signal() -> void:
 	radio.play()
 
+func horror_cue(kind: String, at: Vector3) -> void:
+	var type: int = {"knock":7,"whisper":8,"radio":9,"steps":1}.get(kind,8)
+	if not horror_cache.has(type):horror_cache[type]=noise_stream(.75 if type!=1 else .18,type)
+	var cue := AudioStreamPlayer3D.new()
+	cue.stream = horror_cache[type]
+	cue.unit_size = 7
+	cue.max_distance = 55
+	cue.volume_db = -14
+	add_child(cue)
+	cue.global_position = at
+	cue.finished.connect(cue.queue_free)
+	cue.play()
+
 func _exit_tree() -> void:
-	for audio_player in [sea, steps, effect, rainfall, drone, radio]:
+	for audio_player in [sea, steps, effect, rainfall, drone, radio, engine]:
 		if is_instance_valid(audio_player):
 			audio_player.stop()
 			audio_player.stream = null

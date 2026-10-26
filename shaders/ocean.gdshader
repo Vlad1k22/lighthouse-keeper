@@ -20,6 +20,10 @@ void fragment() {
 	vec2 p = world_pos.xz;
 	float angle = atan(p.y, p.x);
 	float coast = length(p / vec2(21.5, 17.5)) / (1.0 + 0.045 * sin(angle * 5.0) + 0.035 * cos(angle * 7.0));
+	vec2 north = p - vec2(-4.0, -28.0);
+	float north_angle = atan(north.y, north.x);
+	float north_coast = length(north / vec2(23.0,20.0)) / (1.0 + 0.028*sin(north_angle*7.0) + 0.025*cos(north_angle*5.0));
+	coast = min(coast,north_coast);
 	float depth = smoothstep(0.94, 1.85, coast);
 	vec3 shallow = mix(vec3(0.09, 0.15, 0.14), vec3(0.035, 0.07, 0.085), night_factor);
 	vec3 deep = mix(vec3(0.018, 0.045, 0.06), vec3(0.009, 0.018, 0.03), night_factor);

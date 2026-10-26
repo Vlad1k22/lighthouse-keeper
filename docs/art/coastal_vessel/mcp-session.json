@@ -1,0 +1,122 @@
+[
+  {
+    "time": "2026-10-26T02:32:29.427153",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "get_addon_status",
+    "script": null,
+    "tool_error": false,
+    "result_start": "{\n  \"up_to_date\": true,\n  \"protocol_version\": 15,\n  \"expected_protocol_version\": 15,\n  \"addon_version\": [\n    1,\n    8\n  ],\n  \"capabilities\": [\n    \"bpy_api_lookup\",\n    \"describe_node_type\",\n    \"drain_human_activity\",\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:35:08.372375",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_01_foundation.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: FOUNDATION_OK 15 materials 14 images; MCP modeling initialized\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:37:42.596111",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_02_hull.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: HULL_OK 804 source objects; deck z=1.000 m; starboard access gap retained\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:39:31.306431",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_03_wheelhouse.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: WHEELHOUSE_OK 982 objects; detailed hollow cabin and exterior helm\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:40:47.097682",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "look",
+    "script": "look-ship.json",
+    "tool_error": false,
+    "result_start": "Tiles left to right, top to bottom: three_quarter, back, top. Framed 982 objects, 9.65 x 17.88 x 9.1 m across, centred at [1.36, 1.11, 3.65].",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:42:57.195465",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_04_equipment.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: EQUIPMENT_OK 1227 editable source objects; repair variants, engine, fenders, tackle, fittings complete\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:49:01.713860",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_06_presentation.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: RENDER_DEVICES [('Intel Core Ultra 5 125H', 'CPU', False), ('Intel(R) Arc(TM) Graphics', 'ONEAPI', True)]\nInfo: Saved as \"A37_coastal_vessel_v01.blend\"\nRENDER_START\nRENDER_SAVED C:\\Users\\Redmi",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:51:24.811645",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_07_glass.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: 02:51:21 | INFO: Starting glTF 2.0 export\n02:51:21 | INFO: Extracting primitive: SV_Deck_Substrate_mesh.001\n02:51:21 | WARNING: More than one shader node tex image used for a texture. The resu",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:55:35.613211",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_08_final_review.py",
+    "tool_error": false,
+    "result_start": "Error executing code: Communication error with Blender: {\"exception_type\": \"NameError\", \"message\": \"name 'scene' is not defined\", \"traceback\": \"Traceback (most recent call last):\\n  File \\\"C:\\\\Users\\\\Redmi\\\\AppData\\\\Roam",
+    "execution_status": "error"
+  },
+  {
+    "time": "2026-10-26T02:57:47.194580",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_08_final_review.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: Info: Saved as \"A37_coastal_vessel_v01.blend\"\nFINAL_BEAUTY C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/docs/art/coastal_vessel/blender-beauty.png\n",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T02:59:27.112915",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_09_verify_source.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: SOURCE_ROUNDTRIP_PASS {\"source_reopened\": true, \"blender\": \"5.2.2 LTS\", \"editable_source_objects\": 1227, \"packed_texture_count\": 12, \"all_textures_packed\": true, \"texture_sizes\": {\"SV_Antifoul",
+    "execution_status": "ok"
+  },
+  {
+    "time": "2026-10-26T03:03:29.547655",
+    "protocol": "MCP",
+    "server": "mcp-for-blender==2.2.4",
+    "tool": "execute_blender_code",
+    "script": "ship_10_portable_lettering.py",
+    "tool_error": false,
+    "result_start": "Code executed successfully: Info: Saved as \"A37_coastal_vessel_v01.blend\"\nPORTABLE_SOURCE_LETTERING 9 text objects converted inside Blender; GLB already contains the same mesh lettering\n",
+    "execution_status": "ok"
+  }
+]

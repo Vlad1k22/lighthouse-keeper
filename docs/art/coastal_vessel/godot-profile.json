@@ -1,0 +1,12 @@
+{
+	"average_fps": 59.9979450703815,
+	"device": "Intel(R) Arc(TM) Graphics",
+	"draw_calls": 775.0,
+	"frame_p95_ms": 16.6666675359011,
+	"note": "Single local sample at the ship; other applications and shader caches influence timing.",
+	"objects": 1414.0,
+	"rendered_primitives": 531578.0,
+	"renderer": "Compatibility / OpenGL 3.3",
+	"samples": 240,
+	"viewport": "1280x800 (1440x900 canvas)"
+}

@@ -4,11 +4,14 @@ var keeper: CharacterBody3D
 var game: Node
 var attack_cooldown := 0.0
 var life_clock := 0.0
+var passive := false
+var stationary := false
+var mirroring := false
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(keeper) or not is_instance_valid(game):
 		return
-	if not game.playing or game.finished or game.paused or game.fishing.is_open():
+	if not game.playing or game.finished or game.paused or game.fishing.is_open() or game.expedition.sailing:
 		return
 	life_clock += delta
 	attack_cooldown -= delta
@@ -25,16 +28,21 @@ func _physics_process(delta: float) -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if not hit.is_empty():
 		direction = direction.rotated(Vector3.UP, 1.2)
-	var speed := 2.4 if afraid else 1.65
+	var speed := 2.4 if afraid else 1.65 + minf(0.65, (game.day-1)*0.035)
+	if stationary and distance>4:speed=0
+	if mirroring:
+		direction = Vector3(-keeper.velocity.x,0,keeper.velocity.z).normalized()
+		speed = Vector2(keeper.velocity.x,keeper.velocity.z).length()*.8
 	velocity.x = direction.x * speed
 	velocity.z = direction.z * speed
 	if not is_on_floor():
 		velocity.y -= delta * 20
 	move_and_slide()
-	$Visual.rotation.y = atan2(direction.x, direction.z)
+	if direction.length_squared()>.01:$Visual.rotation.y = atan2(direction.x, direction.z)
 	$Visual.scale.y = 1.0 + sin(life_clock * 2.5) * 0.04
-	if distance < 1.3 and not afraid and attack_cooldown <= 0:
-		game.take_damage(12)
+	if distance < 1.3 and not afraid and not passive and attack_cooldown <= 0:
+		game.take_damage(12 + mini(8, game.day/4))
 		attack_cooldown = 1.5
-	if global_position.y < -4 or Vector2(global_position.x, global_position.z).length() > 32:
+	if passive and life_clock>10:queue_free()
+	if global_position.y < -4 or Vector2(global_position.x, global_position.z).length() > 65:
 		queue_free()

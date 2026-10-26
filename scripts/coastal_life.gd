@@ -4,6 +4,7 @@ extends Node3D
 var rain_strength := 0.0
 var night_strength := 0.0
 var clock := 0.0
+var story_storm := false
 var boat: Node3D
 var boat_origin := Vector3.ZERO
 var lamps: Array[OmniLight3D] = []
@@ -18,6 +19,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	clock += delta
 	var target := 0.7 if night_strength > 0.7 else 0.0
+	if story_storm:target = 1.0
 	if weather_mode == 1:
 		target = 1.0
 	elif weather_mode == 2:

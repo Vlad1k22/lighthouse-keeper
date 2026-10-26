@@ -32,7 +32,7 @@ window/stretch/mode="canvas_items"
 
 [rendering]
 
-anti_aliasing/quality/msaa_3d=2
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2
 environment/defaults/default_clear_color=Color(0.08, 0.16, 0.2, 1)

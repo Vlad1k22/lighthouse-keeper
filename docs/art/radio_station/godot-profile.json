@@ -1,0 +1,11 @@
+{
+	"average_fps": 60.0000000000001,
+	"device": "Intel(R) Arc(TM) Graphics",
+	"draw_calls": 1178.0,
+	"frame_p95_ms": 16.6666675359011,
+	"note": "Single local full-game sample at the radio station; other views/hardware may differ.",
+	"rendered_primitives": 854586.0,
+	"renderer": "Compatibility / OpenGL 3.3",
+	"samples": 241,
+	"viewport": "1280x800 (1440x900 canvas)"
+}

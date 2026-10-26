@@ -1,0 +1,9 @@
+{
+  "source_reopened": true,
+  "packed_textures": 9,
+  "external_texture_files_required": false,
+  "source_objects": 499,
+  "font_objects": 0,
+  "blender_version": "5.2.2 LTS",
+  "front": "Blender -Y -> Godot +Z"
+}

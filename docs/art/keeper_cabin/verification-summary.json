@@ -1,0 +1,60 @@
+{
+  "engine": "Godot 4.7.2 stable",
+  "test_sets": [
+    {
+      "passed": 32,
+      "total": 32,
+      "description": "checks passed"
+    },
+    {
+      "passed": 33,
+      "total": 33,
+      "description": "fishing checks passed"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "description": "provisions checks passed"
+    },
+    {
+      "passed": 6,
+      "total": 6,
+      "description": "spawn checks passed"
+    },
+    {
+      "passed": 10,
+      "total": 10,
+      "description": "dock checks passed; position=(23.72001, 1.000835, 5.400002)"
+    },
+    {
+      "passed": 65,
+      "total": 65,
+      "description": "expedition checks passed"
+    },
+    {
+      "passed": 14,
+      "total": 14,
+      "description": "northern access checks passed"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "description": "Blender export checks passed"
+    },
+    {
+      "passed": 24,
+      "total": 24,
+      "description": "cabin checks passed"
+    }
+  ],
+  "passed": 226,
+  "total": 226,
+  "all_passed": true,
+  "note": "Full suite passed; the final PBR palette/export was additionally verified by all 24 targeted cabin checks.",
+  "final_cabin_check": {
+    "passed": 24,
+    "total": 24,
+    "artifact_sha256": "2f471733637f718aaf9a0d19507586e14dcf6479aee944c7a0317c3321c20cf2",
+    "after_final_material_review": true
+  }
+}

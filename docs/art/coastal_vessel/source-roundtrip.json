@@ -1,0 +1,59 @@
+{
+  "source_reopened": true,
+  "blender": "5.2.2 LTS",
+  "editable_source_objects": 1227,
+  "packed_texture_count": 12,
+  "all_textures_packed": true,
+  "texture_sizes": {
+    "SV_Antifouling_BaseColor": [
+      1024,
+      1024
+    ],
+    "SV_Antifouling_Normal": [
+      1024,
+      1024
+    ],
+    "SV_Antifouling_ORM": [
+      1024,
+      1024
+    ],
+    "SV_BluePaint_BaseColor": [
+      4096,
+      4096
+    ],
+    "SV_BluePaint_Normal": [
+      4096,
+      4096
+    ],
+    "SV_BluePaint_ORM": [
+      4096,
+      4096
+    ],
+    "SV_IvoryPaint_BaseColor": [
+      2048,
+      2048
+    ],
+    "SV_IvoryPaint_Normal": [
+      2048,
+      2048
+    ],
+    "SV_IvoryPaint_ORM": [
+      2048,
+      2048
+    ],
+    "SV_WeatheredDeck_BaseColor": [
+      2048,
+      2048
+    ],
+    "SV_WeatheredDeck_Normal": [
+      2048,
+      2048
+    ],
+    "SV_WeatheredDeck_ORM": [
+      2048,
+      2048
+    ]
+  },
+  "units": "METRIC",
+  "separate_game_export_collection": true
+}

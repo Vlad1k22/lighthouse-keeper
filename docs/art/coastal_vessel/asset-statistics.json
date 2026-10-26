@@ -1,0 +1,29 @@
+{
+  "asset": "A37-A44 / Coastal vessel Северный",
+  "blender": "5.2.2 LTS",
+  "pipeline": "MCP stdio → mcp-for-blender 2.2.4 → Blender addon",
+  "source_objects": 1227,
+  "export_meshes": 10,
+  "triangles": 395274,
+  "vertices": 211390,
+  "materials": [
+    "SV_Antifouling",
+    "SV_BluePaint",
+    "SV_Brass",
+    "SV_DarkIron",
+    "SV_Galvanized",
+    "SV_Glass",
+    "SV_GreenLamp",
+    "SV_Interior",
+    "SV_IvoryPaint",
+    "SV_Lettering",
+    "SV_Orange",
+    "SV_RedLamp",
+    "SV_Rope",
+    "SV_Rubber",
+    "SV_WeatheredDeck"
+  ],
+  "glb": "C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/assets/models/coastal_vessel/coastal_vessel_v01.glb",
+  "deck_height_m": 1.0,
+  "axis": "Blender Z-up,+Y bow → Godot Y-up,-Z bow"
+}

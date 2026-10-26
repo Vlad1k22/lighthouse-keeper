@@ -1,0 +1,71 @@
+{
+  "asset": "A04 / Keeper cabin",
+  "pipeline": "MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon",
+  "blender": "5.2.2 LTS",
+  "source_objects": 499,
+  "export_meshes": 7,
+  "triangles": 51638,
+  "vertices": 27038,
+  "surfaces": 40,
+  "materials": [
+    "KC_BareTimber",
+    "KC_Brass",
+    "KC_Cavity",
+    "KC_ChimneyBrick",
+    "KC_Cloth",
+    "KC_DarkIron",
+    "KC_DullZinc",
+    "KC_LanternGlass",
+    "KC_OldIvoryTrim",
+    "KC_StandingSeamSteel",
+    "KC_WeatheredPaint",
+    "KC_WetStone",
+    "KC_WindowGlass",
+    "KC_WindowWarm"
+  ],
+  "texture_sizes": {
+    "KC_ChimneyBrick_BaseColor": [
+      512,
+      512
+    ],
+    "KC_ChimneyBrick_Normal": [
+      512,
+      512
+    ],
+    "KC_ChimneyBrick_ORM": [
+      512,
+      512
+    ],
+    "KC_StandingSeamSteel_BaseColor": [
+      1024,
+      1024
+    ],
+    "KC_StandingSeamSteel_Normal": [
+      1024,
+      1024
+    ],
+    "KC_StandingSeamSteel_ORM": [
+      1024,
+      1024
+    ],
+    "KC_WeatheredPaint_BaseColor": [
+      1024,
+      1024
+    ],
+    "KC_WeatheredPaint_Normal": [
+      1024,
+      1024
+    ],
+    "KC_WeatheredPaint_ORM": [
+      1024,
+      1024
+    ]
+  },
+  "budget": "Shared 1024px wood and roof, 512px chimney; constant materials for hidden/simple surfaces",
+  "closed_shell": true,
+  "gameplay": "Existing exterior sleep, cook, workbench and radio retained",
+  "source": "C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/assets/source_blender/keeper_cabin/A04_keeper_cabin_v01.blend",
+  "glb": "C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/assets/models/keeper_cabin/keeper_cabin_v01.glb",
+  "material_color_space": "Constant hex palette: sRGB -> scene-linear before glTF export",
+  "glb_size_bytes": 13211308
+}

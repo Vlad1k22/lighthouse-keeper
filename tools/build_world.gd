@@ -36,6 +36,8 @@ func build() -> void:
 	make_characters()
 	OVERHAUL.apply(world)
 	set_owners(world, world)
+	# Attach the Blender visual after procedural styling, preserving its PBR materials.
+	preload("res://scripts/cabin_visual.gd").install(land.get_node("KeeperCabin"))
 	var packed := PackedScene.new()
 	var result := packed.pack(world)
 	if result == OK:

@@ -1,0 +1,10 @@
+{
+  "source_reopened": true,
+  "blender": "5.2.2 LTS",
+  "packed_textures": 9,
+  "font_objects": 0,
+  "external_texture_files_required": false,
+  "source_objects": 340,
+  "source_size_bytes": 8407473,
+  "modeling_protocol": "MCP stdio / mcp-for-blender 2.2.4"
+}

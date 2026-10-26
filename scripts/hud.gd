@@ -22,6 +22,7 @@ var start_button: Button
 var continue_button: Button
 var save_button: Button
 var exit_button: Button
+var demo_button: Button
 var health_bar: ProgressBar
 var hunger_bar: ProgressBar
 var sanity_bar: ProgressBar
@@ -113,10 +114,10 @@ func build_game_ui() -> void:
 	game_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(game_ui)
 	text(game_ui, "СМОТРИТЕЛЬ МАЯКА", Rect2(32, 25, 440, 30), 22, PAPER)
-	text(game_ui, "ПЕРВАЯ СМЕНА   /   ОСТРОВ СЕВЕРНЫЙ", Rect2(33, 59, 420, 22), 12, GOLD)
+	text(game_ui, "ПУТЬ С ОСТРОВА   /   ОСТРОВ СЕВЕРНЫЙ", Rect2(33, 59, 420, 22), 12, GOLD)
 	panel(game_ui, Rect2(32, 119, 300, 295))
 	text(game_ui, "ЖУРНАЛ СМОТРИТЕЛЯ", Rect2(51, 137, 270, 25), 13, GOLD)
-	task_label = text(game_ui, "", Rect2(51, 177, 263, 220), 16)
+	task_label = text(game_ui, "", Rect2(51, 177, 263, 220), 14)
 	task_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel(game_ui, Rect2(1150, 25, 258, 83))
 	clock_label = text(game_ui, "", Rect2(1168, 38, 224, 33), 23)
@@ -144,7 +145,7 @@ func build_game_ui() -> void:
 	meal_label = text(game_ui, "", Rect2(1036, 815, 354, 43), 12)
 	var prompt_bg := panel(game_ui, Rect2(491, 808, 505, 56))
 	prompt_bg.name = "PromptBackground"
-	prompt_label = text(game_ui, "", Rect2(508, 819, 474, 31), 17)
+	prompt_label = text(game_ui, "", Rect2(508, 819, 474, 31), 14)
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message_label = text(game_ui, "", Rect2(410, 704, 600, 65), 18, GOLD)
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -152,8 +153,8 @@ func build_game_ui() -> void:
 	message_label.add_theme_color_override("font_shadow_color", Color("102b32"))
 	message_label.add_theme_constant_override("shadow_offset_x", 2)
 	message_label.add_theme_constant_override("shadow_offset_y", 2)
-	text(game_ui, "WASD ходить  ·  Shift бег  ·  E действие  ·  F фонарь  ·  R еда  ·  J журнал  ·  Esc меню", Rect2(32, 880, 1050, 18), 11, MUTED)
-	text(game_ui, "O обзор  ·  N ночь  ·  V погода", Rect2(1132, 880, 276, 18), 11, MUTED)
+	text(game_ui, "WASD ходить  ·  Shift бег  ·  E действие  ·  F фонарь  ·  R еда  ·  M карта и задачи  ·  J журнал  ·  Esc меню", Rect2(32, 880, 1050, 18), 11, MUTED)
+	text(game_ui, "O обзор  ·  M цели  ·  J записи", Rect2(1132, 880, 276, 18), 11, MUTED)
 	danger = ColorRect.new()
 	danger.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	danger.color = Color(0.5, 0.05, 0.03, 0)
@@ -198,11 +199,13 @@ func build_menu() -> void:
 	menu_title.add_theme_font_override("font", serif)
 	menu_subtitle = text(menu, "Один остров. Одна смена.\nСохраните свет — и дождитесь рассвета.", Rect2(66, 426, 530, 67), 20, MUTED)
 	menu_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	start_button = make_button(menu, "Начать смену", Vector2(66, 535), func(): game.start_shift(), true)
+	start_button = make_button(menu, "Начать смену", Vector2(66, 535), func(): game.start_or_resume(), true)
+	demo_button = make_button(menu, "Свободный осмотр · гавань", Vector2(66, 601), func(): game.start_demo())
+	demo_button.size.x = 380
 	continue_button = make_button(menu, "Продолжить сохранение", Vector2(66, 601), func(): game.load_game())
 	save_button = make_button(menu, "Сохранить смену", Vector2(66, 667), func(): game.save_game())
 	exit_button = make_button(menu, "Выйти из игры", Vector2(66, 733), func(): get_tree().quit())
-	text(menu, "Учебная демоверсия  •  Первая смена\nВлад Людкевич · Костя Котельников\nАндрей Виговский · Артём Артамонов", Rect2(66, 809, 680, 69), 12, MUTED)
+	text(menu, "Учебная демоверсия  •  Путь с острова\nВлад Людкевич · Костя Котельников\nАндрей Виговский · Артём Артамонов", Rect2(66, 809, 680, 69), 12, MUTED)
 	show_menu("title")
 
 func show_menu(mode: String) -> void:
@@ -211,23 +214,26 @@ func show_menu(mode: String) -> void:
 	menu.show()
 	game_ui.hide()
 	save_button.visible = mode == "pause"
+	demo_button.visible = mode == "title"
 	continue_button.visible = FileAccess.file_exists(game.save_path)
-	exit_button.position.y = 733 if mode == "pause" else (667 if continue_button.visible else 601)
+	continue_button.position.y = 667 if mode == "title" else 601
+	exit_button.position.y = 733 if mode == "pause" or mode == "title" and continue_button.visible else (667 if mode == "title" or continue_button.visible else 601)
 	if mode == "pause":
 		menu_title.text = "Смена\nна паузе"
-		menu_subtitle.text = "Возвращайтесь, когда будете готовы.\nEsc — продолжить. N — сменить время для показа."
+		menu_subtitle.text = "Время и ночные события остановлены.\nEsc — продолжить. F9 — сохранить, F10 — загрузить."
 		start_button.text = "Вернуться на остров"
 	elif mode == "win":
-		menu_title.text = "До первого\nрассвета"
-		menu_subtitle.text = "Маяк горит. Убежище укреплено.\nВы пережили первую ночь на острове."
+		menu_title.text = "Курс\nна материк"
+		menu_subtitle.text = ("День 30. Контрольная группа принята.\nВы держитесь курса по приборам. Голоса остаются на острове." if game.campaign.enabled else "День %d. Катер исправен, сигнал принят.\nВы оставили остров позади. Или вам так кажется?" % game.day)
 		start_button.text = "Начать новую смену"
 	elif mode == "loss":
 		menu_title.text = "Остров\nне отпускает"
 		menu_subtitle.text = "Смена закончилась. Свет и укреплённая\nхижина помогут пережить следующую попытку."
-		start_button.text = "Попробовать снова"
+		start_button.text = "Повторить этот день" if game.campaign.enabled and FileAccess.file_exists(game.checkpoint_path) else "Попробовать снова"
+		if game.campaign.enabled:menu_subtitle.text = "Начало дня сохранено автоматически.\nПовторите только последнее дежурство."
 	else:
 		menu_title.text = "Смотритель\nмаяка"
-		menu_subtitle.text = "Один остров. Одна смена.\nСохраните свет — и дождитесь рассвета."
+		menu_subtitle.text = "30 коротких дежурств. Свет, записи и ложные голоса.\nПодготовьте катер и дождитесь настоящего сигнала."
 		start_button.text = "Начать смену"
 
 func show_game() -> void:
@@ -276,15 +282,12 @@ func refresh() -> void:
 	var minutes := int(game.hour * 60) % 1440
 	clock_label.text = "ДЕНЬ %02d    %02d:%02d" % [game.day, minutes / 60, minutes % 60]
 	status_label.text = ("НОЧЬ · ДОЖДЬ" if game.coastal_life.rain_strength > 0.2 else "НОЧЬ · ДЕРЖИТЕСЬ СВЕТА") if game.is_night() else game.coastal_life.weather_label()
-	var a := "✓" if game.fuel_found else "○"
-	var b := "✓" if game.lighthouse_on else "○"
-	var c := "✓" if game.barricade_built else "○"
-	task_label.text = "%s Найти топливо\n%s Запустить маяк\n%s Укрепить хижину\n○ Дождаться рассвета\n\n%s" % [a, b, c, game.current_objective()]
+	task_label.text = game.expedition.tasks()
 	health_bar.value = game.health
 	hunger_bar.value = game.hunger
 	sanity_bar.value = game.sanity
 	stamina_bar.value = game.player.stamina
-	inventory_label.text = "Топливо %d   Дерево %d\nРыба %d        Еда %d" % [game.inventory.fuel, game.inventory.wood, game.inventory.fish, game.inventory.food]
+	inventory_label.text = "Топливо %d   Дерево %d   Детали %d\nРыба %d   Еда %d   M — план катера" % [game.inventory.fuel, game.inventory.wood, int(game.expedition.state.scrap), game.inventory.fish, game.inventory.food]
 	if not game.food_items.is_empty():
 		var meal: Dictionary = game.food_items[game.selected_food]
 		var benefit: Dictionary = game.PROVISIONS.bonuses(meal)
@@ -293,9 +296,13 @@ func refresh() -> void:
 	else:
 		meal_label.text = "Готовой еды нет. Рыбу можно приготовить на печи."
 	prompt_label.text = "[E] " + game.nearest_station.display_name if is_instance_valid(game.nearest_station) else "Исследуйте остров · ◆ места действий"
+	if is_instance_valid(game.nearest_station) and game.campaign.enabled:
+		prompt_label.text = "[E] "+game.campaign.prompt(game.nearest_station.station_id,game.nearest_station.display_name)
 	if is_instance_valid(game.nearest_station) and game.nearest_station.station_id == "cook" and not game.fish_items.is_empty():
 		var raw_fish: Dictionary = game.fish_items[game.selected_fish]
 		prompt_label.text = "[E] %s %d г · [T] выбор" % [raw_fish.name, raw_fish.weight]
+	if game.expedition.sailing:
+		prompt_label.text = "Курс на материк · переход к внешнему бую"
 	fishing_overlay.visible = game.fishing.is_open()
 	if fishing_overlay.visible:
 		fishing_overlay.queue_redraw()

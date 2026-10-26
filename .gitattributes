@@ -10,3 +10,5 @@
 *.jpg binary
 *.pptx binary
 *.docx binary
+*.blend binary
+*.glb binary

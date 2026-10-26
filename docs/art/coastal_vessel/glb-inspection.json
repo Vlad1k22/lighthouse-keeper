@@ -1,0 +1,122 @@
+{
+  "magic": "glTF",
+  "version": 2,
+  "length_matches": true,
+  "size_bytes": 84167124,
+  "generator": "Khronos glTF Blender I/O v5.2.40",
+  "meshes": 10,
+  "primitives": 46,
+  "images": 12,
+  "all_images_embedded": true,
+  "extensions_used": [
+    "KHR_materials_clearcoat"
+  ],
+  "materials": [
+    {
+      "name": "SV_DarkIron",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_WeatheredDeck",
+      "base_color_texture": true,
+      "metal_roughness_texture": true,
+      "normal_texture": true,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Galvanized",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_GreenLamp",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Interior",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Lettering",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_RedLamp",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Rubber",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_BluePaint",
+      "base_color_texture": true,
+      "metal_roughness_texture": true,
+      "normal_texture": true,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_IvoryPaint",
+      "base_color_texture": true,
+      "metal_roughness_texture": true,
+      "normal_texture": true,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Brass",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Orange",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Rope",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Antifouling",
+      "base_color_texture": true,
+      "metal_roughness_texture": true,
+      "normal_texture": true,
+      "alpha": "OPAQUE"
+    },
+    {
+      "name": "SV_Glass",
+      "base_color_texture": false,
+      "metal_roughness_texture": false,
+      "normal_texture": false,
+      "alpha": "BLEND"
+    }
+  ],
+  "external_uris": []
+}

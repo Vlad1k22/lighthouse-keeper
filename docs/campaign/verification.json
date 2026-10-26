@@ -1,0 +1,97 @@
+{
+  "verified_at": "2026-10-26T07:11:30.4249925+03:00",
+  "engine": "Godot 4.7.2 stable",
+  "status": "passed",
+  "passed": 462,
+  "total": 462,
+  "suites": [
+    {
+      "passed": 32,
+      "total": 32,
+      "name": "first_shift"
+    },
+    {
+      "passed": 33,
+      "total": 33,
+      "name": "fishing"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "name": "provisions"
+    },
+    {
+      "passed": 6,
+      "total": 6,
+      "name": "spawn_safety"
+    },
+    {
+      "passed": 10,
+      "total": 10,
+      "name": "dock_access"
+    },
+    {
+      "passed": 65,
+      "total": 65,
+      "name": "expedition"
+    },
+    {
+      "passed": 14,
+      "total": 14,
+      "name": "northern_access"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "name": "ship_asset"
+    },
+    {
+      "passed": 24,
+      "total": 24,
+      "name": "cabin_asset"
+    },
+    {
+      "passed": 28,
+      "total": 28,
+      "name": "radio_asset"
+    },
+    {
+      "passed": 208,
+      "total": 208,
+      "name": "campaign"
+    }
+  ],
+  "campaign": {
+    "nominal_timer_seconds": 1897,
+    "journal_entries": 72,
+    "full_month_method": "Real station handlers and authored rewards; no inventory grants during the full-month run; automated teleport between stations. Physical routes have separate regression checks.",
+    "days": 30,
+    "human_playtest_duration": "not measured",
+    "supply_interactions": {
+      "scrap": 4,
+      "wood": 11,
+      "cache": 0,
+      "fuel": 2
+    },
+    "nominal_timer_minutes": "31:37",
+    "playable_nights": 29
+  },
+  "native_godot_smoke": {
+    "screenshots": [
+      "day-preparation.png",
+      "map-and-plan.png",
+      "night-event.png",
+      "journal-code.png",
+      "radio-code.png"
+    ],
+    "verified": [
+      "code input Enter and Escape",
+      "map and code modal pause",
+      "mirror double movement",
+      "checkpoint retry and manual slot isolation",
+      "legacy save migration",
+      "30-day departure gate"
+    ]
+  },
+  "campaign_data_sha256": "1AF7DBEC2B05C2D9B9821E4D587E0567AF61B0CB1CCA694C14C4B98CAD225F98"
+}

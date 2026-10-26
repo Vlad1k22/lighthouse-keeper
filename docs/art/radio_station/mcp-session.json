@@ -1,0 +1,79 @@
+{
+  "asset": "A26-A28_radio_station_v01",
+  "telemetry_disabled": true,
+  "blender_bridge_port": 9877,
+  "calls": [
+    {
+      "time": "2026-10-26T05:36:41.594360",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_01_building.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: RADIO_BUILDING_OK 79 source objects; 17 materials; MCP-authored\n"
+    },
+    {
+      "time": "2026-10-26T05:38:51.968491",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_02_mast_transmitter.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: RADIO_MAST_TRANSMITTER_OK 339 editable parts; separate fault/online/battery variants\n"
+    },
+    {
+      "time": "2026-10-26T05:40:36.543565",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_03_export.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: INFO Draco is available, use library at C:\\Users\\Redmi\\AppData\\Local\\Programs\\Blender\\blender-5.2.2-windows-x64\\5.2\\scripts\\addons_core\\io_scene_gltf2\\bf_intern_draco_bridge.dll\nINFO MeshOptimizer is available, use library at C:\\Users\\Redmi\\AppData\\Local\\Programs\\Blender\\blender-5.2.2-windows-x64\\5.2\\scripts\\addons_core\\io_scene_gltf2\\bf_intern_meshopt_bridge.dll\n05:40:36 | INFO: Starting glTF 2.0 export\n05:40:36 | INFO: Extracting primitive: Cylinder.258\n05:40:36 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:40:36 | INFO: Primitives created: 5\n05:40:36 | INFO: Extracting primitive: Cube.334\n05:40:36 | INFO: Primitives created: 4\n05:40:36 | INFO: Extracting primitive: UpperCoax_Mesh.001\n05:40:36 | INFO: Primitives created: 4\n05:40:36 | INFO: Extracting primitive: Cube.173\n05:40:36 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:40:36 | INFO: Primitives created: 11\n05:40:36 | INFO: Extracting primitive: Cube.244\n05:40:36 | INFO: Primitives created: 3\n05:40:36 | INFO: Extracting primitive: Cube.340\n05:40:36 | INFO: Primitives created: 1\n05:40:36 | INFO: Extracting primitive: Cube.341\n05:40:36 | INFO: Primitives created: 2\n05:40:36 | INFO: Extracting primitive: Cube.189\n05:40:36 | INFO: Primitives created: 3\n05:40:36 | INFO: Extracting primitive: Cube.300\n05:40:36 | INFO: Primitives created: 8\n05:40:36 | INFO: Finished glTF 2.0 export in 0.27174949645996094 s\n\nInfo: Saved as \"A26_radio_station_v01.blend\"\nRADIO_EXPORT_OK {\"asset\": \"A26-A28 / Radio station and antenna\", \"pipeline\": \"MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon\", \"blender\": \"5.2.2 LTS\", \"source_objects\": 339, \"export_meshes\": 9, \"triangles\": 41096, \"vertices\": 24996, \"surfaces\": 41, \"materials\": [\"RS_Brass\", \"RS_Cavity\", \"RS_Concrete\", \"RS_DarkIron\", \"RS_DialFace\", \"RS_DialGlass\", \"RS_DialGlow\", \"RS_ExposedBrick\", \"RS_FadedIvory\", \"RS_FaultAmber\", \"RS_Galvanized\", \"RS_MastBeacon\", \"RS_ReadyGreen\", \"RS_Rubber\", \"RS_SaltWornPlaster\", \"RS_Warning\", \"RS_WeatheredSteel\"], \"texture_sizes\": {\"RS_ExposedBrick_BaseColor\": [512, 512], \"RS_ExposedBrick_Normal\": [512, 512], \"RS_ExposedBrick_ORM\": [512, 512], \"RS_SaltWornPlaster_BaseColor\": [1024, 1024], \"RS_SaltWornPlaster_Normal\": [1024, 1024], \"RS_SaltWornPlaster_ORM\": [1024, 1024], \"RS_WeatheredSteel_BaseColor\": [1024, 1024], \"RS_WeatheredSteel_Normal\": [1024, 1024], \"RS_WeatheredSteel_ORM\": [1024, 1024]}, \"hut_footprint_m\": [5, 3.7], \"mast_height_m\": 10.05, \"budget\": \"Shared 1024px plaster and steel, 512px exposed brick; constant materials on simple parts\", \"origin_godot\": [-12, 1, -39.5], \"forward\": \"Blender -Y -> Godot +Z\", \"closed_shell\": true, \"repair_variants\": [\"RS_PanelFault\", \"RS_PanelOnline\", \"RS_BatteryInstalled\"]}\n"
+    },
+    {
+      "time": "2026-10-26T05:41:04.192699",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_04_presentation.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: Info: Saved as \"A26_radio_station_v01.blend\"\nRADIO_RENDER_START\nInfo: Saved as \"A26_radio_station_v01.blend\"\nRADIO_RENDER_SAVED C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/docs/art/radio_station\n"
+    },
+    {
+      "time": "2026-10-26T05:43:29.212278",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_05_display_review.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: RADIO_DISPLAY_REVIEW_OK: separate readable 104.6 labels for off/on states\n"
+    },
+    {
+      "time": "2026-10-26T05:43:32.983916",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_03_export.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: 05:43:31 | INFO: Starting glTF 2.0 export\n05:43:31 | INFO: Extracting primitive: Cylinder.405\n05:43:31 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:43:31 | INFO: Primitives created: 5\n05:43:31 | INFO: Extracting primitive: Cube.506\n05:43:31 | INFO: Primitives created: 4\n05:43:31 | INFO: Extracting primitive: UpperCoax_Mesh.002\n05:43:31 | INFO: Primitives created: 4\n05:43:31 | INFO: Extracting primitive: Cube.345\n05:43:31 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:43:31 | INFO: Primitives created: 11\n05:43:31 | INFO: Extracting primitive: Cube.416\n05:43:31 | INFO: Primitives created: 3\n05:43:31 | INFO: Extracting primitive: Cube.512\n05:43:31 | INFO: Primitives created: 2\n05:43:31 | INFO: Extracting primitive: Cube.513\n05:43:32 | INFO: Primitives created: 3\n05:43:32 | INFO: Extracting primitive: Cube.361\n05:43:32 | INFO: Primitives created: 3\n05:43:32 | INFO: Extracting primitive: Cube.472\n05:43:32 | INFO: Primitives created: 8\n05:43:32 | INFO: Finished glTF 2.0 export in 0.30338358879089355 s\n\nInfo: Saved as \"A26_radio_station_v01.blend\"\nRADIO_EXPORT_OK {\"asset\": \"A26-A28 / Radio station and antenna\", \"pipeline\": \"MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon\", \"blender\": \"5.2.2 LTS\", \"source_objects\": 340, \"export_meshes\": 9, \"triangles\": 42444, \"vertices\": 26352, \"surfaces\": 43, \"materials\": [\"RS_Brass\", \"RS_Cavity\", \"RS_Concrete\", \"RS_DarkIron\", \"RS_DialFace\", \"RS_DialGlass\", \"RS_DialGlow\", \"RS_ExposedBrick\", \"RS_FadedIvory\", \"RS_FaultAmber\", \"RS_Galvanized\", \"RS_MastBeacon\", \"RS_ReadyGreen\", \"RS_Rubber\", \"RS_SaltWornPlaster\", \"RS_Warning\", \"RS_WeatheredSteel\"], \"texture_sizes\": {\"RS_ExposedBrick_BaseColor\": [512, 512], \"RS_ExposedBrick_Normal\": [512, 512], \"RS_ExposedBrick_ORM\": [512, 512], \"RS_SaltWornPlaster_BaseColor\": [1024, 1024], \"RS_SaltWornPlaster_Normal\": [1024, 1024], \"RS_SaltWornPlaster_ORM\": [1024, 1024], \"RS_WeatheredSteel_BaseColor\": [1024, 1024], \"RS_WeatheredSteel_Normal\": [1024, 1024], \"RS_WeatheredSteel_ORM\": [1024, 1024]}, \"hut_footprint_m\": [5, 3.7], \"mast_height_m\": 10.05, \"budget\": \"Shared 1024px plaster and steel, 512px exposed brick; constant materials on simple parts\", \"origin_godot\": [-12, 1, -39.5], \"forward\": \"Blender -Y -> Godot +Z\", \"closed_shell\": true, \"repair_variants\": [\"RS_PanelFault\", \"RS_PanelOnline\", \"RS_BatteryInstalled\"]}\n"
+    },
+    {
+      "time": "2026-10-26T05:43:55.985699",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_04_presentation.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: Info: Saved as \"A26_radio_station_v01.blend\"\nRADIO_RENDER_START\nInfo: Saved as \"A26_radio_station_v01.blend\"\nRADIO_RENDER_SAVED C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/docs/art/radio_station\n"
+    },
+    {
+      "time": "2026-10-26T05:48:14.577789",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/radio_06_verify_source.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: RADIO_SOURCE_ROUNDTRIP_OK {\"source_reopened\": true, \"blender\": \"5.2.2 LTS\", \"packed_textures\": 9, \"font_objects\": 0, \"external_texture_files_required\": false, \"source_objects\": 340, \"source_size_bytes\": 8407473, \"modeling_protocol\": \"MCP stdio / mcp-for-blender 2.2.4\"}\n"
+    }
+  ]
+}

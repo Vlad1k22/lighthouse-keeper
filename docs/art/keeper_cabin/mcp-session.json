@@ -1,0 +1,78 @@
+{
+  "asset": "A04_keeper_cabin_v01",
+  "telemetry_disabled": true,
+  "calls": [
+    {
+      "time": "2026-10-26T05:06:52.564876",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_01_structure.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: CABIN_STRUCTURE_OK 288 source objects; 14 materials; only 1024/512 px maps\n"
+    },
+    {
+      "time": "2026-10-26T05:08:59.181760",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_02_details.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: CABIN_DETAILS_OK 491 editable objects; exterior only; shared PBR maps\n"
+    },
+    {
+      "time": "2026-10-26T05:09:19.471631",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_03_export.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: INFO Draco is available, use library at C:\\Users\\Redmi\\AppData\\Local\\Programs\\Blender\\blender-5.2.2-windows-x64\\5.2\\scripts\\addons_core\\io_scene_gltf2\\bf_intern_draco_bridge.dll\nINFO MeshOptimizer is available, use library at C:\\Users\\Redmi\\AppData\\Local\\Programs\\Blender\\blender-5.2.2-windows-x64\\5.2\\scripts\\addons_core\\io_scene_gltf2\\bf_intern_meshopt_bridge.dll\n05:09:19 | INFO: Starting glTF 2.0 export\n05:09:19 | INFO: Extracting primitive: Cube.889\n05:09:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:09:19 | INFO: Primitives created: 5\n05:09:19 | INFO: Extracting primitive: RainDownpipe_Mesh.002\n05:09:19 | INFO: Primitives created: 4\n05:09:19 | INFO: Extracting primitive: Cube.868\n05:09:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:09:19 | INFO: Primitives created: 7\n05:09:19 | INFO: Extracting primitive: Cube.712\n05:09:19 | INFO: Primitives created: 3\n05:09:19 | INFO: Extracting primitive: Cube.659\n05:09:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:09:19 | INFO: Primitives created: 4\n05:09:19 | INFO: Extracting primitive: Cube.460\n05:09:19 | INFO: Primitives created: 8\n05:09:19 | INFO: Extracting primitive: Cube.743\n05:09:19 | INFO: Primitives created: 9\n05:09:19 | INFO: Finished glTF 2.0 export in 0.24935054779052734 s\n\nInfo: Saved as \"A04_keeper_cabin_v01.blend\"\nCABIN_EXPORT_OK {\"asset\": \"A04 / Keeper cabin\", \"pipeline\": \"MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon\", \"blender\": \"5.2.2 LTS\", \"source_objects\": 491, \"export_meshes\": 7, \"triangles\": 51286, \"vertices\": 26846, \"surfaces\": 40, \"materials\": [\"KC_BareTimber\", \"KC_Brass\", \"KC_Cavity\", \"KC_ChimneyBrick\", \"KC_Cloth\", \"KC_DarkIron\", \"KC_DullZinc\", \"KC_LanternGlass\", \"KC_OldIvoryTrim\", \"KC_StandingSeamSteel\", \"KC_WeatheredPaint\", \"KC_WetStone\", \"KC_WindowGlass\", \"KC_WindowWarm\"], \"texture_sizes\": {\"KC_ChimneyBrick_BaseColor\": [512, 512], \"KC_ChimneyBrick_Normal\": [512, 512], \"KC_ChimneyBrick_ORM\": [512, 512], \"KC_StandingSeamSteel_BaseColor\": [1024, 1024], \"KC_StandingSeamSteel_Normal\": [1024, 1024], \"KC_StandingSeamSteel_ORM\": [1024, 1024], \"KC_WeatheredPaint_BaseColor\": [1024, 1024], \"KC_WeatheredPaint_Normal\": [1024, 1024], \"KC_WeatheredPaint_ORM\": [1024, 1024]}, \"budget\": \"Shared 1024px wood and roof, 512px chimney; constant materials for hidden/simple surfaces\", \"closed_shell\": true, \"gameplay\": \"Existing exterior sleep, cook, workbench and radio retained\", \"source\": \"C:\\\\Users\\\\Redmi\\\\Documents\\\\Codex\\\\2026-09-28\\\\x20\\\\outputs\\\\lighthouse-keeper/assets/source_blender/keeper_cabin/A04_keeper_cabin_v01.blend\", \"glb\": \"C:\\\\Users\\\\Redmi\\\\Documents\\\\Codex\\\\2026-09-28\\\\x20\\\\outputs\\\\lighthouse-keeper/assets/models/keeper_cabin/keeper_cabin_v01.glb\"}\n"
+    },
+    {
+      "time": "2026-10-26T05:10:27.957545",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_04_presentation.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: Info: Saved as \"A04_keeper_cabin_v01.blend\"\nCABIN_RENDER_START\nCABIN_RENDER_SAVED C:\\Users\\Redmi\\Documents\\Codex\\2026-09-28\\x20\\outputs\\lighthouse-keeper/docs/art/keeper_cabin/blender-beauty.png\n"
+    },
+    {
+      "time": "2026-10-26T05:13:14.392312",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_05_access_ramp.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: CABIN_ACCESS_RAMP_OK: width 1.28m, rise 0.4m, run 0.7m; no extra textures\n"
+    },
+    {
+      "time": "2026-10-26T05:13:19.006170",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_03_export.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: 05:13:17 | INFO: Starting glTF 2.0 export\n05:13:17 | INFO: Extracting primitive: Cube.1348\n05:13:17 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:13:17 | INFO: Primitives created: 5\n05:13:17 | INFO: Extracting primitive: RainDownpipe_Mesh.004\n05:13:17 | INFO: Primitives created: 4\n05:13:17 | INFO: Extracting primitive: Cube.1327\n05:13:17 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:13:17 | INFO: Primitives created: 7\n05:13:17 | INFO: Extracting primitive: Cube.1171\n05:13:17 | INFO: Primitives created: 3\n05:13:17 | INFO: Extracting primitive: Cube.1118\n05:13:17 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:13:17 | INFO: Primitives created: 4\n05:13:17 | INFO: Extracting primitive: Cube.919\n05:13:17 | INFO: Primitives created: 8\n05:13:17 | INFO: Extracting primitive: Cube.1202\n05:13:17 | INFO: Primitives created: 9\n05:13:17 | INFO: Finished glTF 2.0 export in 0.2185196876525879 s\n\nInfo: Saved as \"A04_keeper_cabin_v01.blend\"\nCABIN_EXPORT_OK {\"asset\": \"A04 / Keeper cabin\", \"pipeline\": \"MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon\", \"blender\": \"5.2.2 LTS\", \"source_objects\": 499, \"export_meshes\": 7, \"triangles\": 51638, \"vertices\": 27038, \"surfaces\": 40, \"materials\": [\"KC_BareTimber\", \"KC_Brass\", \"KC_Cavity\", \"KC_ChimneyBrick\", \"KC_Cloth\", \"KC_DarkIron\", \"KC_DullZinc\", \"KC_LanternGlass\", \"KC_OldIvoryTrim\", \"KC_StandingSeamSteel\", \"KC_WeatheredPaint\", \"KC_WetStone\", \"KC_WindowGlass\", \"KC_WindowWarm\"], \"texture_sizes\": {\"KC_ChimneyBrick_BaseColor\": [512, 512], \"KC_ChimneyBrick_Normal\": [512, 512], \"KC_ChimneyBrick_ORM\": [512, 512], \"KC_StandingSeamSteel_BaseColor\": [1024, 1024], \"KC_StandingSeamSteel_Normal\": [1024, 1024], \"KC_StandingSeamSteel_ORM\": [1024, 1024], \"KC_WeatheredPaint_BaseColor\": [1024, 1024], \"KC_WeatheredPaint_Normal\": [1024, 1024], \"KC_WeatheredPaint_ORM\": [1024, 1024]}, \"budget\": \"Shared 1024px wood and roof, 512px chimney; constant materials for hidden/simple surfaces\", \"closed_shell\": true, \"gameplay\": \"Existing exterior sleep, cook, workbench and radio retained\", \"source\": \"C:\\\\Users\\\\Redmi\\\\Documents\\\\Codex\\\\2026-09-28\\\\x20\\\\outputs\\\\lighthouse-keeper/assets/source_blender/keeper_cabin/A04_keeper_cabin_v01.blend\", \"glb\": \"C:\\\\Users\\\\Redmi\\\\Documents\\\\Codex\\\\2026-09-28\\\\x20\\\\outputs\\\\lighthouse-keeper/assets/models/keeper_cabin/keeper_cabin_v01.glb\"}\n"
+    },
+    {
+      "time": "2026-10-26T05:14:04.966816",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_06_review.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: CABIN_SOURCE_ROUNDTRIP_OK {\"source_reopened\": true, \"packed_textures\": 9, \"external_texture_files_required\": false, \"source_objects\": 499, \"font_objects\": 0, \"blender_version\": \"5.2.2 LTS\", \"front\": \"Blender -Y -> Godot +Z\"}\nCABIN_FINAL_RENDER_OK\n"
+    },
+    {
+      "time": "2026-10-26T05:18:54.910622",
+      "protocol": "MCP",
+      "server": "mcp-for-blender==2.2.4",
+      "tool": "execute_blender_code",
+      "script": "outputs/lighthouse-keeper/tools/blender/cabin_07_material_review.py",
+      "execution_status": "ok",
+      "result": "Code executed successfully: 05:18:43 | INFO: Starting glTF 2.0 export\n05:18:43 | INFO: Extracting primitive: Cube.1348\n05:18:43 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:18:43 | INFO: Primitives created: 5\n05:18:43 | INFO: Extracting primitive: RainDownpipe_Mesh.004\n05:18:43 | INFO: Primitives created: 4\n05:18:43 | INFO: Extracting primitive: Cube.1327\n05:18:43 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:18:43 | INFO: Primitives created: 7\n05:18:43 | INFO: Extracting primitive: Cube.1171\n05:18:43 | INFO: Primitives created: 3\n05:18:43 | INFO: Extracting primitive: Cube.1118\n05:18:43 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.\n05:18:43 | INFO: Primitives created: 4\n05:18:43 | INFO: Extracting primitive: Cube.919\n05:18:43 | INFO: Primitives created: 8\n05:18:43 | INFO: Extracting primitive: Cube.1202\n05:18:43 | INFO: Primitives created: 9\n05:18:43 | INFO: Finished glTF 2.0 export in 0.24360990524291992 s\n\nInfo: Saved as \"A04_keeper_cabin_v01.blend\"\nCABIN_PALETTE_REVIEW_OK: scene-linear PBR values, source and GLB updated\n"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "asset": "A26-A28 / Radio station and antenna",
+  "pipeline": "MCP stdio -> mcp-for-blender 2.2.4 -> Blender addon",
+  "blender": "5.2.2 LTS",
+  "source_objects": 340,
+  "export_meshes": 9,
+  "triangles": 42444,
+  "vertices": 26352,
+  "surfaces": 43,
+  "materials": [
+    "RS_Brass",
+    "RS_Cavity",
+    "RS_Concrete",
+    "RS_DarkIron",
+    "RS_DialFace",
+    "RS_DialGlass",
+    "RS_DialGlow",
+    "RS_ExposedBrick",
+    "RS_FadedIvory",
+    "RS_FaultAmber",
+    "RS_Galvanized",
+    "RS_MastBeacon",
+    "RS_ReadyGreen",
+    "RS_Rubber",
+    "RS_SaltWornPlaster",
+    "RS_Warning",
+    "RS_WeatheredSteel"
+  ],
+  "texture_sizes": {
+    "RS_ExposedBrick_BaseColor": [
+      512,
+      512
+    ],
+    "RS_ExposedBrick_Normal": [
+      512,
+      512
+    ],
+    "RS_ExposedBrick_ORM": [
+      512,
+      512
+    ],
+    "RS_SaltWornPlaster_BaseColor": [
+      1024,
+      1024
+    ],
+    "RS_SaltWornPlaster_Normal": [
+      1024,
+      1024
+    ],
+    "RS_SaltWornPlaster_ORM": [
+      1024,
+      1024
+    ],
+    "RS_WeatheredSteel_BaseColor": [
+      1024,
+      1024
+    ],
+    "RS_WeatheredSteel_Normal": [
+      1024,
+      1024
+    ],
+    "RS_WeatheredSteel_ORM": [
+      1024,
+      1024
+    ]
+  },
+  "hut_footprint_m": [
+    5,
+    3.7
+  ],
+  "mast_height_m": 10.05,
+  "budget": "Shared 1024px plaster and steel, 512px exposed brick; constant materials on simple parts",
+  "origin_godot": [
+    -12,
+    1,
+    -39.5
+  ],
+  "forward": "Blender -Y -> Godot +Z",
+  "closed_shell": true,
+  "repair_variants": [
+    "RS_PanelFault",
+    "RS_PanelOnline",
+    "RS_BatteryInstalled"
+  ],
+  "glb_size_bytes": 11646048
+}

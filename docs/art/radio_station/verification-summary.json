@@ -1,0 +1,60 @@
+{
+  "engine": "Godot 4.7.2 stable",
+  "test_sets": [
+    {
+      "passed": 32,
+      "total": 32,
+      "description": "checks passed"
+    },
+    {
+      "passed": 33,
+      "total": 33,
+      "description": "fishing checks passed"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "description": "provisions checks passed"
+    },
+    {
+      "passed": 6,
+      "total": 6,
+      "description": "spawn checks passed"
+    },
+    {
+      "passed": 10,
+      "total": 10,
+      "description": "dock checks passed; position=(23.72001, 1.000835, 5.400002)"
+    },
+    {
+      "passed": 65,
+      "total": 65,
+      "description": "expedition checks passed"
+    },
+    {
+      "passed": 14,
+      "total": 14,
+      "description": "northern access checks passed"
+    },
+    {
+      "passed": 21,
+      "total": 21,
+      "description": "Blender export checks passed"
+    },
+    {
+      "passed": 24,
+      "total": 24,
+      "description": "cabin checks passed"
+    },
+    {
+      "passed": 28,
+      "total": 28,
+      "description": "radio asset checks passed"
+    }
+  ],
+  "passed": 254,
+  "total": 254,
+  "all_passed": true,
+  "native_repair": true,
+  "asset_sha256": "94beb8de223cd139b7a4e09c66d5338ff1c7c6cc6e111d31f79db7bf8f2a077e"
+}

@@ -1,0 +1,16 @@
+{
+  "format": "glTF 2.0 GLB",
+  "magic_valid": true,
+  "version": 2,
+  "declared_length_matches": true,
+  "size_bytes": 13211308,
+  "generator": "Khronos glTF Blender I/O v5.2.40",
+  "meshes": 7,
+  "triangles": 51638,
+  "materials": 14,
+  "embedded_images": 9,
+  "all_images_embedded": true,
+  "external_buffers": false,
+  "cameras": 0,
+  "sha256": "2f471733637f718aaf9a0d19507586e14dcf6479aee944c7a0317c3321c20cf2"
+}

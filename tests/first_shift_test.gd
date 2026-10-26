@@ -33,7 +33,7 @@ func run() -> void:
 	game.hours_per_second = 0
 	game.save_path = "user://automated_first_shift_test.json"
 	game.start_shift()
-	check(game.stations.size() == 9, "All nine Area3D interaction stations exist")
+	check(game.stations.size() == 26, "Original nine and seventeen northern interaction stations exist")
 	check(not game.attempt_interaction(station("fuel")), "Distant resource cannot be picked up")
 	check(not interact("beacon"), "Lighthouse requires fuel")
 	check(interact("fuel") and game.inventory.fuel == 1, "Fuel pickup enters inventory")
@@ -124,10 +124,11 @@ func run() -> void:
 	check(game.player.position.distance_to(initial_position) > 1.0, "WASD moves CharacterBody3D using physics")
 	check(game.player.position.y > 0.8 and game.player.position.y < 1.4, "Island collision supports player")
 	game.hour = 6.1
+	game.day = 2
 	game.was_night = true
 	await process_frame
 	await process_frame
-	check(game.finished and game.hud.menu.visible, "Prepared player reaches first dawn victory")
+	check(not game.finished and game.day == 2 and not game.lighthouse_on, "First dawn opens day two and requires new lighthouse fuel")
 	print("RESULT: ", checks - failures, "/", checks, " checks passed")
 	game.queue_free()
 	await create_timer(0.1).timeout

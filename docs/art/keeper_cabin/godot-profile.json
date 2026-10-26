@@ -1,0 +1,11 @@
+{
+	"average_fps": 59.9999950000006,
+	"device": "Intel(R) Arc(TM) Graphics",
+	"draw_calls": 1453.0,
+	"frame_p95_ms": 16.6666675359011,
+	"note": "One local sample at the cabin with the full game running; not a whole-game performance guarantee.",
+	"rendered_primitives": 755347.0,
+	"renderer": "Compatibility / OpenGL 3.3",
+	"samples": 240,
+	"viewport": "1280x800 (1440x900 canvas)"
+}

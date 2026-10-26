@@ -1,11 +1,19 @@
 extends Node3D
-## Контроллер первой смены: задания, время суток, выживание, сохранение.
+## Выживание, календарь экспедиции, взаимодействия и сохранения.
 const HUD = preload("res://scripts/hud.gd")
 const SOUND = preload("res://scripts/soundscape.gd")
 const SHADOW_SCENE = preload("res://scenes/shadow.tscn")
 const Geo = preload("res://scripts/geometry.gd")
 const FISHING = preload("res://scripts/fishing.gd")
 const PROVISIONS = preload("res://scripts/provisions.gd")
+const EXPEDITION = preload("res://scripts/expedition.gd")
+const CAMPAIGN = preload("res://scripts/campaign.gd")
+var expedition := EXPEDITION.new()
+var campaign := CAMPAIGN.new()
+var checkpoints_enabled := true
+var loading_save := false
+var last_run_won := false
+var checkpoint_path := "user://campaign_day_checkpoint.json"
 
 @export var hours_per_second: float = 0.055
 @onready var player: CharacterBody3D = $Keeper
@@ -59,14 +67,28 @@ const STORIES := {
 }
 
 func _ready() -> void:
+	# Keep application/config/name stable so existing user:// saves remain visible.
+	DisplayServer.window_set_title("Смотритель маяка | Путь с острова")
 	fishing.resolved.connect(on_fishing_resolved)
 	beacon = world.find_child("Lighthouse", true, false)
 	coastal_life = world.get_node("CoastalLife")
+	preload("res://scripts/ship_visual.gd").install(world.get_node("NorthernCoast/CoastalVessel"))
+	preload("res://scripts/cabin_visual.gd").install(world.get_node("IslandGeometry/KeeperCabin"))
+	preload("res://scripts/radio_visual.gd").install(world.get_node("NorthernCoast"))
+	expedition.setup(self)
+	campaign.setup(self)
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--preview-") or argument.begins_with("--demo-") or argument=="--no-checkpoints":checkpoints_enabled=false
 	stations = get_tree().get_nodes_in_group("interactables")
 	sound = Node.new()
 	sound.set_script(SOUND)
 	add_child(sound)
 	player.stepped.connect(sound.footstep)
+	var listener := AudioListener3D.new()
+	listener.name = "HorrorListener"
+	listener.position.y = 1.4
+	player.add_child(listener)
+	listener.make_current()
 	hud = CanvasLayer.new()
 	hud.set_script(HUD)
 	add_child(hud)
@@ -110,6 +132,14 @@ func _ready() -> void:
 		build_barricade()
 		beacon.set_powered(true)
 		coastal_life.rain_strength = 0.7
+	elif "--demo-expedition" in OS.get_cmdline_user_args() or "--preview-harbor" in OS.get_cmdline_user_args() or "--preview-map" in OS.get_cmdline_user_args() or "--preview-vessel" in OS.get_cmdline_user_args():
+		start_demo()
+		if "--preview-vessel" in OS.get_cmdline_user_args():
+			player.position = Vector3(-33,1.3,-21)
+			camera_focus = player.position
+			target_zoom = 23
+		if "--preview-map" in OS.get_cmdline_user_args():
+			expedition.open_board()
 	elif "--preview-play" in OS.get_cmdline_user_args():
 		start_shift()
 		hour = 18.3
@@ -118,16 +148,34 @@ func _ready() -> void:
 		beacon.set_powered(true)
 		notify("Маяк снова горит. Подготовьте убежище к ночи.")
 	if not capture_path.is_empty():
-		if "--preview-play" in OS.get_cmdline_user_args() or "--preview-fishing" in OS.get_cmdline_user_args():
+		if "--preview-vessel" in OS.get_cmdline_user_args():
+			camera_focus = player.position+Vector3(0,1,0)
+			camera_zoom = 23
+		elif "--preview-harbor" in OS.get_cmdline_user_args() or "--preview-map" in OS.get_cmdline_user_args():
+			camera_focus = Vector3(-27,2,-24)
+			camera_zoom = 32
+			target_zoom = 32
+		elif "--preview-play" in OS.get_cmdline_user_args() or "--preview-fishing" in OS.get_cmdline_user_args():
 			camera_focus = player.position + Vector3(0, 1, 0)
 			camera_zoom = 25
 		else:
-			camera_focus = Vector3(0, 2, 1) if playing else Vector3(-5, 2, 3)
-			camera_zoom = 43 if playing else 42
+			camera_focus = Vector3(-6, 2, -16) if playing else Vector3(-5, 2, 3)
+			camera_zoom = 78 if playing else 42
 		camera.position = camera_focus + Vector3(29, 34, 40)
 		camera.look_at(camera_focus)
 		camera.size = camera_zoom
 	update_atmosphere()
+
+func start_or_resume() -> void:
+	if playing and paused and not finished:
+		start_shift()
+	elif finished and not last_run_won and campaign.enabled and FileAccess.file_exists(checkpoint_path):
+		retry_day()
+	else:
+		campaign.enabled = true
+		checkpoints_enabled = true
+		playing = false
+		start_shift()
 
 func start_shift() -> void:
 	if playing and paused and not finished:
@@ -145,12 +193,16 @@ func start_shift() -> void:
 	health = 100
 	hunger = 85
 	sanity = 100
-	hour = 16.5
+	hour = 7.0 if campaign.enabled else 16.5
 	day = 1
 	fuel_found = false
 	lighthouse_on = false
 	barricade_built = false
 	beacon.set_powered(false)
+	expedition.reset()
+	campaign.reset()
+	expedition.reset_ship()
+	expedition.update_visuals()
 	reset_world_state()
 	player.position = Vector3(3, 1.2, 4)
 	player.velocity = Vector3.ZERO
@@ -159,6 +211,7 @@ func start_shift() -> void:
 	playing = true
 	paused = false
 	finished = false
+	last_run_won = false
 	journal_open = false
 	journal_entries.clear()
 	coastal_life.weather_mode = 0
@@ -168,7 +221,8 @@ func start_shift() -> void:
 	player.enabled = true
 	overview = false
 	hud.show_game()
-	notify("Первая смена. Найдите канистру у ящиков на северной тропе.")
+	notify("День 1. Найдите канистру, зажгите маяк и укрепите хижину. M — карта и план.", 10)
+	save_checkpoint()
 
 func reset_world_state() -> void:
 	clear_enemies()
@@ -187,20 +241,24 @@ func reset_world_state() -> void:
 				child.show()
 
 func _process(delta: float) -> void:
+	expedition.advance(delta)
 	if fishing.is_open() and playing and not paused and not finished:
 		var old_phase := fishing.phase
 		var held := Input.is_physical_key_pressed(KEY_SPACE) or Input.is_physical_key_pressed(KEY_E) or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 		fishing.advance(delta, held)
 		if old_phase != fishing.phase and fishing.phase == FISHING.Phase.BITE:
 			sound.interact("fish")
-	var active := playing and not paused and not finished and not fishing.is_open()
+	var active := playing and not paused and not finished and not fishing.is_open() and not expedition.sailing
 	if active:
 		enemies = enemies.filter(func(enemy): return is_instance_valid(enemy))
-		hour += delta * hours_per_second
-		if hour >= 24:
-			hour -= 24
-			day += 1
-		hunger = maxf(0, hunger - delta * 0.11)
+		if campaign.enabled:
+			campaign.advance(delta*hours_per_second/0.055)
+		else:
+			hour += delta * hours_per_second
+			if hour >= 24:
+				hour -= 24
+				day += 1
+		hunger = maxf(0, hunger - delta * (0.025 if campaign.enabled else 0.11))
 		if hunger <= 0:
 			health -= delta * 0.8
 		sanity = clampf(sanity + delta * (-0.14 if is_night() and not is_safe(player.position) else 0.04), 0, 100)
@@ -217,8 +275,8 @@ func _process(delta: float) -> void:
 		else:
 			clear_enemies()
 			night_spawned = false
-			if was_night and hour >= 6 and hour < 12:
-				finish_shift(lighthouse_on and barricade_built)
+			if hour >= 6 and hour < 20:
+				expedition.dawn()
 		if health <= 0:
 			finish_shift(false)
 		interaction_cooldown = maxf(0, interaction_cooldown - delta)
@@ -231,6 +289,9 @@ func _process(delta: float) -> void:
 	message_time = maxf(0, message_time - delta)
 	update_atmosphere()
 	sound.set_ambience(coastal_life.night_strength, coastal_life.rain_strength)
+	sound.set_story_silence(campaign.enabled and campaign.state.night and campaign.entry().night.kind=="silence")
+	var ship: Node3D = world.get_node("NorthernCoast/CoastalVessel")
+	sound.set_engine(player.position.distance_to(ship.position+Vector3(0,1,1)), expedition.state.engine and playing and not finished and not paused)
 	update_camera(delta)
 	hud.refresh()
 	if not capture_path.is_empty():
@@ -242,8 +303,8 @@ func update_camera(delta: float) -> void:
 	var focus := Vector3(-5, 2, 3)
 	var zoom := 42.0
 	if playing and not finished:
-		focus = Vector3(0, 2, 1) if overview else player.position + Vector3(0, 1.0, 0)
-		zoom = 43.0 if overview else target_zoom
+		focus = Vector3(-6, 2, -16) if overview else player.position + Vector3(0, 1.0, 0)
+		zoom = 78.0 if overview else target_zoom
 	camera_focus = camera_focus.lerp(focus, 1.0 - exp(-delta * 4))
 	camera_zoom = lerpf(camera_zoom, zoom, 1.0 - exp(-delta * 3))
 	camera.position = camera_focus + Vector3(29, 34, 40)
@@ -274,16 +335,23 @@ func update_atmosphere() -> void:
 	sun.light_color = Color("bac6c2").lerp(Color("778ca4"), night)
 	world.get_node("Ocean").material_override.set_shader_parameter("night_factor", night)
 	coastal_life.night_strength = night
+	coastal_life.story_storm = campaign.enabled and campaign.state.night and campaign.entry().night.kind in ["storm","last"]
+	if campaign.enabled and campaign.state.night and campaign.entry().night.kind in ["silence","double"]:
+		env.fog_density += .003
 
 func is_night() -> bool:
 	return hour >= 20 or hour < 6
 
 func is_safe(at: Vector3) -> bool:
+	if int(expedition.state.fire_day)>0 and int(expedition.state.fire_day)>=int(expedition.state.last_dawn) and at.distance_to(Vector3(-16,1,-28)) < 6:
+		return true
 	if lighthouse_on and Vector2(at.x + 9, at.z + 7).length() < 8:
 		return true
 	return barricade_built and Vector2(at.x - 5, at.z - 1).length() < 6.0
 
 func current_objective() -> String:
+	if day > 1:
+		return expedition.objective()
 	if not fuel_found:
 		return "Канистра — у ящиков к северо-востоку от хижины."
 	if not lighthouse_on:
@@ -304,12 +372,19 @@ func update_nearest() -> void:
 			nearest_station = station
 	for station in stations:
 		station.selected = station == nearest_station
+		station.quest_target = campaign.enabled and campaign.target_id()==station.station_id
 
 func attempt_interaction(station: Area3D) -> bool:
-	if not playing or paused or finished or fishing.is_open() or not is_instance_valid(station):
+	if not playing or paused or finished or fishing.is_open() or expedition.sailing or not is_instance_valid(station):
 		return false
 	if Vector2(player.position.x - station.position.x, player.position.z - station.position.z).length() > 2.5 or not station.is_available():
 		return false
+	var handled: int = campaign.intercept(station.station_id)
+	if handled>=0:return handled==1
+	if station.station_id in EXPEDITION.IDS:
+		var succeeded: bool = expedition.interact(station.station_id)
+		campaign.observe(station.station_id,succeeded)
+		return succeeded
 	match station.station_id:
 		"fuel":
 			inventory.fuel += 1
@@ -323,13 +398,15 @@ func attempt_interaction(station: Area3D) -> bool:
 			if lighthouse_on:
 				notify("Маяк работает. Его свет отгоняет тени.")
 				return false
-			if inventory.fuel < 1:
+			if inventory.fuel < 1 and (not campaign.enabled or int(campaign.state.beacon_charge)<=0):
 				notify("Генератору нужно топливо. Проверьте ящики на тропе.")
 				return false
-			inventory.fuel -= 1
+			if not campaign.enabled or int(campaign.state.beacon_charge)<=0:
+				inventory.fuel -= 1
+				if campaign.enabled:campaign.state.beacon_charge = 3
 			lighthouse_on = true
 			beacon.set_powered(true)
-			notify("Маяк зажжён. Теперь соберите древесину для укрепления.")
+			notify("Маяк включён. Запас топлива: %d ночи. M — задачи дня." % int(campaign.state.beacon_charge) if campaign.enabled else "Маяк заправлен до утра. Собирайте припасы и выполняйте план дня. M — карта.")
 			feedback(station.position, "МАЯК ЗАЖЖЁН")
 		"wood":
 			inventory.wood += 1
@@ -363,14 +440,7 @@ func attempt_interaction(station: Area3D) -> bool:
 			notify("Готово: %s. R — съесть: +%d здоровья, +%d сытости." % [PROVISIONS.label(cooked), benefit.health, benefit.hunger])
 			feedback(station.position, "+1 ЕДА")
 		"shelter":
-			if is_night() and lighthouse_on and barricade_built:
-				hour = 5.85
-				was_night = true
-				notify("Вы укрылись в хижине. До рассвета осталось немного.")
-			else:
-				health = minf(100, health + 8)
-				sanity = minf(100, sanity + 15)
-				notify("Небольшая передышка. Ночью пригодятся маяк и укрепление.")
+			return expedition.sleep()
 		"note":
 			unlock_story("sign")
 		"radio":
@@ -379,6 +449,7 @@ func attempt_interaction(station: Area3D) -> bool:
 	if station.station_id != "radio":
 		sound.interact(station.station_id)
 	interaction_cooldown = 0.35
+	campaign.observe(station.station_id,true)
 	return true
 
 func start_fishing() -> void:
@@ -421,8 +492,14 @@ func build_barricade() -> void:
 func spawn_night() -> void:
 	night_spawned = true
 	spawn_clock = 0
+	if campaign.enabled and campaign.state.night:
+		campaign.spawn_threats()
+		return
 	for at in [Vector3(-11, 1.5, 5), Vector3(0, 1.5, -10), Vector3(14, 1.5, 9)]:
 		spawn_shadow(at)
+	if day>1:
+		for at in [Vector3(-8,1.5,-31),Vector3(14,1.5,-27)]:
+			spawn_shadow(at)
 	notify("На острове темнеет. Фонарь и свет маяка отгоняют тени.", 8)
 
 func spawn_shadow(at: Vector3) -> void:
@@ -513,6 +590,7 @@ func open_journal() -> void:
 	journal_open = true
 	paused = true
 	player.enabled = false
+	if campaign.enabled and "c:code" in journal_entries:journal_page=journal_entries.find("c:code")
 	refresh_journal()
 
 func refresh_journal() -> void:
@@ -520,7 +598,9 @@ func refresh_journal() -> void:
 		hud.show_journal("Журнал смотрителя", "На острове слишком тихо.\n\nОсмотрите табличку на тропе к маяку и проверьте радиоприёмник у западной стены хижины. Здесь должны остаться следы тех, кто дежурил до вас.", "НАХОДКИ  /  0 ИЗ 2")
 	else:
 		journal_page = posmod(journal_page, journal_entries.size())
-		var entry: Dictionary = STORIES[journal_entries[journal_page]]
+		var id: String = journal_entries[journal_page]
+		var entry: Dictionary = STORIES[id] if STORIES.has(id) else campaign.journal_entry(id)
+		if entry.is_empty():return
 		hud.show_journal(entry.title, entry.text, "НАХОДКИ  /  %d ИЗ %d" % [journal_page + 1, journal_entries.size()])
 
 func turn_journal_page(direction: int) -> void:
@@ -536,10 +616,15 @@ func close_journal() -> void:
 func finish_shift(won: bool) -> void:
 	fishing.close()
 	finished = true
+	last_run_won = won
 	player.enabled = false
 	hud.show_menu("win" if won else "loss")
 
 func _input(event: InputEvent) -> void:
+	if campaign.code_open() and event is InputEventKey and event.pressed and event.physical_keycode==KEY_ESCAPE:
+		campaign.close_code()
+		get_viewport().set_input_as_handled()
+		return
 	if not fishing.is_open():
 		return
 	var action := false
@@ -560,7 +645,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if fishing.is_open():
+	if fishing.is_open() or expedition.sailing:
 		return
 	if event is InputEventMouseButton and event.pressed and playing:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -568,6 +653,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			target_zoom = minf(38, target_zoom + 2)
 	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if campaign.code_open():
+		if event.physical_keycode == KEY_ESCAPE:campaign.close_code()
+		get_viewport().set_input_as_handled()
+		return
+	if is_instance_valid(expedition.board) and expedition.board.visible:
+		if event.physical_keycode in [KEY_ESCAPE, KEY_E, KEY_M]:
+			expedition.close_board()
+		get_viewport().set_input_as_handled()
 		return
 	if journal_open:
 		if event.physical_keycode in [KEY_ESCAPE, KEY_E, KEY_J]:
@@ -586,6 +680,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not playing or paused or finished:
 		return
 	match event.physical_keycode:
+		KEY_M:
+			expedition.open_board()
 		KEY_E:
 			if interaction_cooldown <= 0:
 				attempt_interaction(nearest_station)
@@ -605,20 +701,24 @@ func _unhandled_input(event: InputEvent) -> void:
 			coastal_life.cycle_weather()
 			notify("Погода: " + ["автоматически", "дождь", "без дождя"][coastal_life.weather_mode])
 		KEY_N:
-			hour = 17.0 if is_night() else 22.0
-			was_night = false
+			if not campaign.enabled:
+				hour = 17.0 if is_night() else 22.0
+				was_night = false
 		KEY_F9:
 			save_game()
 		KEY_F10:
 			load_game()
 
-func save_game() -> bool:
-	if not playing or finished or fishing.is_open():
+func save_game(quiet: bool = false) -> bool:
+	if not playing or finished or fishing.is_open() or expedition.sailing:
 		return false
 	var state := {"version": 1, "inventory": inventory, "health": health, "hunger": hunger, "sanity": sanity, "hour": hour, "day": day, "fuel_found": fuel_found, "lighthouse_on": lighthouse_on, "barricade_built": barricade_built, "position": [player.position.x, player.position.y, player.position.z], "wood_remaining": 9, "was_night": was_night}
 	state["journal"] = journal_entries
 	state["weather_mode"] = coastal_life.weather_mode
-	state["version"] = 2
+	state["version"] = 4
+	state["campaign"] = campaign.serialize()
+	state["lantern_on"] = player.lantern_on
+	state["expedition"] = expedition.state
 	state["fish_items"] = fish_items
 	state["food_items"] = food_items
 	state["selected_fish"] = selected_fish
@@ -627,14 +727,35 @@ func save_game() -> bool:
 	for station in stations:
 		if station.station_id == "wood":
 			state.wood_remaining = station.remaining
+	if not quiet and campaign.enabled and FileAccess.file_exists(checkpoint_path):
+		var checkpoint = JSON.parse_string(FileAccess.get_file_as_string(checkpoint_path))
+		if checkpoint is Dictionary and int(checkpoint.get("day",0))==day:
+			checkpoint.erase("day_checkpoint")
+			state["day_checkpoint"] = checkpoint
 	var file := FileAccess.open(save_path, FileAccess.WRITE)
 	if file == null:
 		notify("Не удалось сохранить смену.")
 		return false
 	file.store_string(JSON.stringify(state, "\t"))
-	notify("Смена сохранена. F10 — загрузить.")
-	hud.continue_button.show()
+	if not quiet:
+		notify("Смена сохранена. F10 — загрузить.")
+		hud.continue_button.show()
 	return true
+
+func save_checkpoint() -> void:
+	if not campaign.enabled or not checkpoints_enabled or loading_save:return
+	if DisplayServer.get_name()=="headless" and not checkpoint_path.begins_with("user://automated_"):return
+	var original := save_path
+	save_path = checkpoint_path
+	save_game(true)
+	save_path = original
+
+func retry_day() -> bool:
+	var original := save_path
+	save_path = checkpoint_path
+	var restored := load_game()
+	save_path = original
+	return restored
 
 func load_game() -> bool:
 	if fishing.is_open():
@@ -643,10 +764,11 @@ func load_game() -> bool:
 		notify("Сохранения пока нет. F9 — сохранить смену.")
 		return false
 	var state = JSON.parse_string(FileAccess.get_file_as_string(save_path))
-	if not state is Dictionary or int(state.get("version", 0)) not in [1, 2]:
+	if not state is Dictionary or int(state.get("version", 0)) not in [1, 2, 3, 4]:
 		notify("Файл сохранения не поддерживается.")
 		return false
 	playing = false
+	loading_save = true
 	start_shift()
 	for key in inventory.keys():
 		inventory[key] = int(state.inventory.get(key, 0))
@@ -660,16 +782,20 @@ func load_game() -> bool:
 	hunger = float(state.hunger)
 	sanity = float(state.sanity)
 	hour = float(state.hour)
-	day = int(state.day)
+	day = clampi(int(state.day),1,30)
 	fuel_found = bool(state.fuel_found)
 	lighthouse_on = bool(state.lighthouse_on)
 	barricade_built = bool(state.barricade_built)
 	was_night = bool(state.get("was_night", false))
+	expedition.restore(state.get("expedition", {}))
+	if int(state.get("version",0))<4:campaign.enabled = true
+	campaign.restore(state.get("campaign",{}) if int(state.get("version",0))>=4 else {},int(state.get("version",0))<4)
 	for entry in state.get("journal", []):
-		if STORIES.has(entry):
+		if entry not in journal_entries and (STORIES.has(entry) or not campaign.journal_entry(str(entry)).is_empty()):
 			journal_entries.append(str(entry))
 	coastal_life.weather_mode = int(state.get("weather_mode", 0))
 	player.position = Vector3(state.position[0], state.position[1], state.position[2])
+	player.lantern_on = bool(state.get("lantern_on",true))
 	beacon.set_powered(lighthouse_on)
 	if barricade_built:
 		build_barricade()
@@ -681,6 +807,16 @@ func load_game() -> bool:
 			world.find_child("FuelCan", true, false).hide()
 			world.find_child("FuelHandle", true, false).hide()
 	notify("Смена загружена.")
+	loading_save = false
+	if campaign.enabled and checkpoints_enabled and (DisplayServer.get_name()!="headless" or checkpoint_path.begins_with("user://automated_")):
+		var checkpoint = state.get("day_checkpoint")
+		if checkpoint is Dictionary and int(checkpoint.get("day",0))==day:
+			checkpoint.erase("day_checkpoint")
+			var checkpoint_file := FileAccess.open(checkpoint_path,FileAccess.WRITE)
+			if checkpoint_file!=null:checkpoint_file.store_string(JSON.stringify(checkpoint))
+		elif save_path!=checkpoint_path:
+			var previous_checkpoint = JSON.parse_string(FileAccess.get_file_as_string(checkpoint_path)) if FileAccess.file_exists(checkpoint_path) else {}
+			if not previous_checkpoint is Dictionary or int(previous_checkpoint.get("day",0))!=day:save_checkpoint()
 	return true
 
 func capture_preview() -> void:
@@ -689,3 +825,28 @@ func capture_preview() -> void:
 	var result := image.save_png(capture_path)
 	print("Captured preview: ", capture_path, " result=", result)
 	get_tree().quit(0 if result == OK else 1)
+
+func start_demo() -> void:
+	# Separate demonstration snapshot; never overwrites the player's save.
+	playing = false
+	campaign.enabled = false
+	checkpoints_enabled = false
+	start_shift()
+	day = 5
+	hour = 14
+	fuel_found = true
+	lighthouse_on = true
+	barricade_built = true
+	beacon.set_powered(true)
+	build_barricade()
+	inventory.wood = 12
+	inventory.fuel = 5
+	for i in 3: food_items.append(PROVISIONS.ration())
+	sync_provisions()
+	expedition.state.merge({"tools":true,"battery":true,"signal":true,"pump":true,"last_dawn":5,"scrap":8},true)
+	expedition.update_visuals()
+	player.position = Vector3(-23,1.3,-21)
+	camera_focus = player.position
+	camera_zoom = 30
+	target_zoom = 30
+	notify("Показ нового этапа · день 5. Пройдите по трапу на катер и почините корпус. M — карта и задачи.",12)

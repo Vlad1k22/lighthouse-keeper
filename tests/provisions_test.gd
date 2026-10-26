@@ -96,7 +96,7 @@ func run() -> void:
 	file.store_string(JSON.stringify(legacy))
 	file.close()
 	check(game.load_game() and game.inventory.fish == 2 and game.inventory.food == 3 and game.fish_items[0].rarity == "common" and game.fish_items[0].weight == 300, "Old saves migrate quantities without losing food or fish")
-	check(game.save_game() and int(JSON.parse_string(FileAccess.get_file_as_string(game.save_path)).version) == 2, "Migrated saves are written in the new format")
+	check(game.save_game() and int(JSON.parse_string(FileAccess.get_file_as_string(game.save_path)).version) == 4, "Migrated saves are written in the new format")
 	game.food_items.clear()
 	game.sync_provisions()
 	check(not game.eat() and game.inventory.fish == 2, "Raw fish cannot be eaten as a cooked meal")

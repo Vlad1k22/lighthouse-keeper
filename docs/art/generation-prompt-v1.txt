@@ -1,0 +1,36 @@
+Use case: infographic-diagram / stylized-concept.
+Create one polished landscape game environment PRODUCTION ART SHEET for the Russian survival horror game "Смотритель маяка". This is a new concept illustration, not a screenshot edit.
+Input image 1 is a REFERENCE ONLY for the existing island layout and major landmarks. Remove all game HUD. Improve the environment toward grounded, detailed, mature maritime horror. The purpose is to plan which models a beginner team should build in Blender and import into Godot.
+
+Canvas: very high resolution landscape, about 16:10. Editorial art direction board, large oblique top-down 3D environment concept occupying the left 70%, clean warm ivory technical list column occupying the right 30%. The whole island is visible with comfortable margins, dark cold grey-green sea, rocky shoreline. Cloudy daytime, clear enough to inspect all buildings, subtle sea mist only at distant water. Muted pine greens, wet brown wood, grey stone, rusted iron, warm amber lighthouse and cabin windows. Detailed believable architecture and naturalistic trees; no cartoon toy look, no exaggerated fantasy, no zombies, no gore, no modern city, no people portraits.
+
+Geographic invariants from reference: a compact elongated island with two broad lobes connected by a wide walkable neck. Original southern lobe: lighthouse on west/left near the neck, keeper cabin south/center, pine forest, old small fishing pier with little rowboat on southeast/right shore. Northern lobe: warehouse on east/right, well and hand pump in center, radio hut with tall antenna on northwest, broken boat hull on northeast shore. Old harbor on west/northwest shore with fuel barrels, campfire, crates and fish trap. A weathered 18-meter coastal vessel with a wheelhouse and open deck is moored WEST of that harbor, connected with a WALKABLE GANGPLANK. No disconnected island pieces, no huge new mountains. Maintain the practical scale of the current map, improve visual richness.
+
+Overlay small neatly aligned numbered callouts 01–14 on the map, leader lines only where necessary, never cover roofs. Each number appears once and matches the list. Existing objects 01–10 use muted teal solid round pins. Proposed additions 11–14 use amber dashed round pins and subtle dashed outlines around their proposed footprints, to distinguish future ideas. Put proposed basement entrance beside the lighthouse, compact weather station on the far north headland, boat shed by the west harbor, wooden lookout deck on the east rocky shore. These four are visibly future concept proposals.
+
+Use exact Russian text, professional legible Cyrillic sans serif, generous line spacing, no illegible tiny captions:
+Top title: "СМОТРИТЕЛЬ МАЯКА"
+Subtitle: "АРТ-ЛИСТ ЛОКАЦИИ · ПЛАН МОДЕЛЕЙ ДЛЯ BLENDER"
+Right column section header: "ЕСТЬ В GODOT"
+Smaller explanatory line: "Улучшить модели в Blender"
+List:
+"01  Маяк и генератор"
+"02  Хижина, печь и верстак"
+"03  Лес и валежник"
+"04  Рыбацкий причал и лодка"
+"05  Склад и инструменты"
+"06  Колодец и насос"
+"07  Радиостанция и антенна"
+"08  Остов лодки"
+"09  Гавань и припасы"
+"10  Катер «Северный»"
+Second section header in amber: "МОЖНО ДОБАВИТЬ"
+List:
+"11  Подвал маяка"
+"12  Метеопост"
+"13  Лодочный сарай"
+"14  Смотровая площадка"
+Bottom right small material swatches or closeup strips: weathered wood, rusty metal, damp stone, dark pine needles; labels "ДЕРЕВО", "МЕТАЛЛ", "КАМЕНЬ", "ХВОЯ".
+Small footer across bottom: "КОНЦЕПТ ЦЕЛЕВОГО ВИДА · НЕ СКРИНШОТ ИГРЫ"
+Below the right list, if room, small readable note: "Начать: катер → маяк → хижина"
+Constraint: exactly one lighthouse, one keeper cabin, one large coastal vessel. Do not invent extra named locations. List numbering is sequential and complete, all fourteen entries must fit. The art should feel like a practical environment artist's location board for a mature atmospheric horror game, not a mobile game map.
