@@ -38,8 +38,8 @@ func mark(id: String) -> void:
 	state.daily[id] = true
 
 func emergency_stock(id: String) -> bool:
-	# Old month-long saves may reach the final day with prototype repairs still unfinished.
-	if not game.campaign.enabled or game.day!=30:return false
+	# Reserve parts and fuel let the player finish outstanding repairs on departure day.
+	if not game.campaign.enabled or game.day!=game.campaign.calendar_days():return false
 	if id=="depot":return not state.ship_fuel and game.inventory.fuel<3
 	if id=="scrap":
 		var needed: int = (0 if state.signal else 2)+(0 if state.hull else 2)+(0 if state.engine else 4)
@@ -106,12 +106,12 @@ func interact(id: String) -> bool:
 			game.notify("Найден аккумулятор передатчика. Под ним записка: «Этот катер ты уже чинил».",10)
 		"transmitter":
 			if not require_day(4): return false
-			if state.signal: return tell("Ответ спасателей: настоящее окно выхода — утром 30-го дня. Выполняйте план и проверяйте записи J." if game.campaign.enabled else "Ответ спасателей: окно спокойного моря с 7-го дня. Подготовьте катер и выходите при дневном свете.")
+			if state.signal: return tell("Ответ спасателей: настоящее окно выхода — утром %d-го дня. Выполняйте план и проверяйте записи J." % game.campaign.calendar_days() if game.campaign.enabled else "Ответ спасателей: окно спокойного моря с 7-го дня. Подготовьте катер и выходите при дневном свете.")
 			if not state.tools or not state.battery: return tell("Нужны инструменты и аккумулятор из остова лодки на северо-восточном берегу.")
 			if not cost(0,2): return false
 			state.signal = true
 			game.sound.radio_signal()
-			game.notify("Передатчик работает! «Штормовая полоса закроет выход до 30-го дня. Готовьте катер и ждите контрольную группу». M — план." if game.campaign.enabled else "Передатчик работает! «Вас слышим. С 7-го дня ждём катер у внешнего буя. Запасите еду и топливо». M — план.",10)
+			game.notify("Передатчик работает! «Штормовая полоса закроет выход до %d-го дня. Готовьте катер и ждите контрольную группу». M — план." % game.campaign.calendar_days() if game.campaign.enabled else "Передатчик работает! «Вас слышим. С 7-го дня ждём катер у внешнего буя. Запасите еду и топливо». M — план.",10)
 		"ship_hull":
 			if not require_day(5): return false
 			if state.hull: return tell("Пробоина заделана. Корпус готов к переходу.")
@@ -137,12 +137,12 @@ func interact(id: String) -> bool:
 			if not require_day(7): return false
 			if state.stores: return tell("Провизия на борту. Три блюда отложены на переход.")
 			if game.food_items.size()<3: return tell("Приготовьте 3 блюда на печи. Подойдут рыба и сухпайки. Сырая рыба не подходит.")
-			for i in 3: game.food_items.pop_back()
+			for i in 3: game.food_items.remove_at(game.PROVISIONS.cargo_index(game.food_items))
 			game.sync_provisions()
 			state.stores = true
 			game.notify("Три готовых блюда погружены в грузовой ящик катера.")
 		"ship_helm":
-			if not ready_to_sail(): return tell("Выход утром 30-го дня, после контрольной группы и последнего дежурства. Нужны исправный катер, 3 топлива и 3 готовых блюда. M — план." if game.campaign.enabled else "Катер ещё не готов. Нужны: сигнал спасателям, корпус, двигатель, топливо, 3 блюда и день 7+. M — состояние катера.")
+			if not ready_to_sail(): return tell("Выход утром %d-го дня, после контрольной группы и последнего дежурства. Нужны исправный катер, 3 топлива и 3 готовых блюда. M — план." % game.campaign.calendar_days() if game.campaign.enabled else "Катер ещё не готов. Нужны: сигнал спасателям, корпус, двигатель, топливо, 3 блюда и день 7+. M — состояние катера.")
 			if game.is_night(): return tell("Выходить в море ночью слишком опасно. Возвращайтесь к штурвалу днём.")
 			sailing = true
 			sailing_clock = 0
@@ -195,7 +195,7 @@ func interact(id: String) -> bool:
 func ready_to_sail() -> bool:
 	var ship_ready: bool = state.signal and state.hull and state.engine and state.ship_fuel and state.stores
 	if game.campaign.enabled:
-		return game.day==30 and game.campaign.state.clearance and game.campaign.state.completed_days.size()>=29 and ship_ready
+		return game.day==game.campaign.calendar_days() and game.campaign.state.clearance and game.campaign.state.completed_days.size()>=game.campaign.final_night() and ship_ready
 	return game.day>=7 and ship_ready
 
 func dawn() -> void:
@@ -325,7 +325,8 @@ func open_board() -> void:
 	if not is_instance_valid(board): build_board()
 	game.paused = true
 	game.player.enabled = false
-	game.player.velocity = Vector3.ZERO
+	if not game.player.jump_in_progress:
+		game.player.velocity = Vector3.ZERO
 	board.show()
 	var checks := ""
 	for pair in [["signal","Сигнал спасателям"],["hull","Корпус: 5 дерева + 2 детали"],["engine","Двигатель: 4 детали"],["ship_fuel","Бак: 3 топлива"],["stores","Провизия: 3 готовых блюда"]]:

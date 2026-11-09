@@ -19,6 +19,7 @@ func ellipse(center: Vector3, radii: Vector2) -> void:
 
 func _draw() -> void:
 	if not is_instance_valid(game): return
+	var player_point := point(game.map_player_position())
 	ellipse(Vector3.ZERO,Vector2(21.5,17.5))
 	ellipse(Vector3(-4,0,-28),Vector2(23,20))
 	draw_line(point(Vector3(-23,0,-21)),point(Vector3(-33,0,-21)),Color("958568"),5 if large else 2)
@@ -29,8 +30,12 @@ func _draw() -> void:
 			draw_circle(point(station.position),2 if large else 1.6,Color("bda577"))
 			if game.campaign.enabled and station.station_id==game.campaign.target_id():
 				draw_arc(point(station.position),9 if large else 5,0,TAU,24,Color("8fd7c0"),2)
-				if large:draw_line(point(game.player.position),point(station.position),Color(.56,.84,.75,.3),1)
-	draw_circle(point(game.player.position),5 if large else 3,Color("ffebaf"))
+				if large:draw_line(player_point,point(station.position),Color(.56,.84,.75,.3),1)
+	if game.campaign.target_id()=="lighthouse_lens":
+		var door := point(game.LIGHTHOUSE_INTERIOR.OUTSIDE_DOOR)
+		draw_arc(door,9 if large else 5,0,TAU,24,Color("8fd7c0"),2)
+		if large:draw_line(player_point,door,Color(.56,.84,.75,.3),1)
+	draw_circle(player_point,5 if large else 3,Color("ffebaf"))
 	for enemy in game.enemies:
 		if is_instance_valid(enemy): draw_circle(point(enemy.position),3 if large else 1.5,Color("bd8070"))
 	if large:

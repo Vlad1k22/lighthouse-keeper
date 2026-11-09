@@ -97,20 +97,23 @@ func warehouse() -> void:
 	var at := Vector3(7,1,-31)
 	G.box(land,"WarehouseBack",at+Vector3(0,1.65,-3),Vector3(8,3.3,0.18),wood,true)
 	for x in [-4.0,4.0]:
-		G.box(land,"WarehouseSide",at+Vector3(x,1.65,0),Vector3(0.18,3.3,6),wood,true)
+		var side_wall := G.box(land,"WarehouseSide",at+Vector3(x,1.65,0),Vector3(0.18,3.3,6),wood,true)
+		if x > 0: side_wall.add_to_group("warehouse_cutaway", true)
 	for x in [-2.8,2.8]:
-		G.box(land,"WarehouseFront",at+Vector3(x,1.65,3),Vector3(2.4,3.3,0.18),wood,true)
+		G.box(land,"WarehouseFront",at+Vector3(x,1.65,3),Vector3(2.4,3.3,0.18),wood,true).add_to_group("warehouse_cutaway", true)
 	for side in [-1,1]:
 		var roof := G.box(land,"CorrugatedRoof",at+Vector3(side*2.1,3.65,0),Vector3(4.5,0.12,6.7),iron)
 		roof.rotation.z = side * -0.16
+		roof.add_to_group("warehouse_cutaway", true)
 	for i in 4:
 		G.crate(land,at+Vector3(-2.8+(i%2)*1.3,0,-1+(i/2)*1.2),1.0)
-	G.box(land,"ToolTable",Vector3(9,1.9,-33),Vector3(2,0.16,0.9),wood,true)
+		land.get_child(-1).add_to_group("warehouse_replaced", true)
+	G.box(land,"ToolTable",Vector3(9,1.9,-33),Vector3(2,0.16,0.9),wood,true).add_to_group("warehouse_replaced", true)
 	G.box(land,"RedToolbox",Vector3(9,2.15,-33),Vector3(0.9,0.42,0.45),Color("6e3e32"))
 	station("tools","Забрать инструменты · день 2",Vector3(9,1,-32))
 	station("scrap","Склад · детали +2 раз в день",Vector3(7,1,-31.2))
-	G.box(land,"MedicalCabinet",Vector3(10.8,2,-29.6),Vector3(0.2,0.8,0.6),Color("a5aba0"))
-	G.box(land,"MedicalCross",Vector3(10.65,2,-29.6),Vector3(0.03,0.42,0.12),Color("86463b"))
+	G.box(land,"MedicalCabinet",Vector3(10.8,2,-29.6),Vector3(0.2,0.8,0.6),Color("a5aba0")).add_to_group("warehouse_replaced", true)
+	G.box(land,"MedicalCross",Vector3(10.65,2,-29.6),Vector3(0.03,0.42,0.12),Color("86463b")).add_to_group("warehouse_replaced", true)
 	station("medical","Аптечка · раз в день",Vector3(10,1,-29.4))
 	road_sign("СТАРЫЙ СКЛАД",Vector3(3.4,1,-27.2),"Инструменты / детали / аптечка")
 
@@ -366,7 +369,7 @@ func paths_and_forest() -> void:
 		G.box(land,"FallenTimber",at+Vector3(0,0.2,0),Vector3(3,0.4,0.5),wood)
 	station("north_wood","Северный валежник · +2 дерева",Vector3(-6,1,-26.8))
 
-func label(parent: Node3D, title: String, at: Vector3, pixels: float) -> void:
+func label(parent: Node3D, title: String, at: Vector3, pixels: float) -> Label3D:
 	var node := Label3D.new()
 	node.text = title
 	node.position = at
@@ -374,12 +377,18 @@ func label(parent: Node3D, title: String, at: Vector3, pixels: float) -> void:
 	node.pixel_size = pixels
 	node.modulate = Color("c6bea0")
 	parent.add_child(node)
+	return node
 
 func road_sign(title: String, at: Vector3, subtitle: String) -> void:
 	G.box(land,"SignPost",at+Vector3(0,0.7,0),Vector3(0.12,1.4,0.14),wood,true)
 	G.box(land,"SignBoard",at+Vector3(0,1.5,0),Vector3(3,0.85,0.12),wood)
-	label(land,title,at+Vector3(0,1.65,0.07),0.009)
-	label(land,subtitle,at+Vector3(0,1.33,0.07),0.0045)
+	for caption in [
+		label(land,title,at+Vector3(0,1.65,0.07),0.0062),
+		label(land,subtitle,at+Vector3(0,1.33,0.07),0.0045),
+	]:
+		caption.outline_size = 3
+		var width := ThemeDB.fallback_font.get_string_size(caption.text,HORIZONTAL_ALIGNMENT_LEFT,-1,caption.font_size).x
+		caption.pixel_size = minf(caption.pixel_size,2.60/(width+2*caption.outline_size))
 
 func station(id: String, title: String, at: Vector3) -> void:
 	var area := Area3D.new()

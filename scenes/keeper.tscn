@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_nogqu"]
 [ext_resource type="Shader" path="res://shaders/weathered_surface.gdshader" id="2_6b2k5"]
+[ext_resource type="PackedScene" path="res://assets/models/characters/keeper_v01.glb" id="3_ib7s3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6b2k5"]
 radius = 0.28
@@ -317,81 +318,97 @@ shape = SubResource("CapsuleShape3D_6b2k5")
 
 [node name="OilskinCoat" type="MeshInstance3D" parent="Visual" unique_id=643920463]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+visible = false
 material_override = SubResource("ShaderMaterial_ib7s3")
 mesh = SubResource("CylinderMesh_2fid1")
 
 [node name="Head" type="MeshInstance3D" parent="Visual" unique_id=1991408172]
 transform = Transform3D(0.38, 0, 0, 0, 0.43, 0, 0, 0, 0.36, 0, 1.52, 0)
+visible = false
 material_override = SubResource("ShaderMaterial_0en5k")
 mesh = SubResource("SphereMesh_s0dq3")
 
 [node name="Eye" type="MeshInstance3D" parent="Visual" unique_id=127167050]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.075, 1.54, 0.172)
+visible = false
 material_override = SubResource("ShaderMaterial_diwhc")
 mesh = SubResource("BoxMesh_p2mfm")
 
 [node name="@MeshInstance3D@857" type="MeshInstance3D" parent="Visual" unique_id=78299193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.075, 1.54, 0.172)
+visible = false
 material_override = SubResource("ShaderMaterial_diwhc")
 mesh = SubResource("BoxMesh_621jb")
 
 [node name="Nose" type="MeshInstance3D" parent="Visual" unique_id=1877175339]
 transform = Transform3D(0.07, 0, 0, 0, 0.075, 0, 0, 0, 0.08, 0, 1.49, 0.19)
+visible = false
 material_override = SubResource("ShaderMaterial_p2mfm")
 mesh = SubResource("SphereMesh_621jb")
 
 [node name="WoolCap" type="MeshInstance3D" parent="Visual" unique_id=1259748638]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.72, 0)
+visible = false
 material_override = SubResource("ShaderMaterial_w6y6g")
 mesh = SubResource("CylinderMesh_t171a")
 
 [node name="Collar" type="MeshInstance3D" parent="Visual" unique_id=112493504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.29, 0.03)
+visible = false
 material_override = SubResource("ShaderMaterial_ei55r")
 mesh = SubResource("BoxMesh_u57dn")
 
 [node name="CoatPlacket" type="MeshInstance3D" parent="Visual" unique_id=1480668603]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0.24)
+visible = false
 material_override = SubResource("ShaderMaterial_gtnma")
 mesh = SubResource("BoxMesh_kspj4")
 
 [node name="CoatButton" type="MeshInstance3D" parent="Visual" unique_id=1176735357]
 transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.025, 0, 0.77, 0.264)
+visible = false
 material_override = SubResource("ShaderMaterial_0xjk0")
 mesh = SubResource("SphereMesh_u57dn")
 
 [node name="@MeshInstance3D@858" type="MeshInstance3D" parent="Visual" unique_id=1863218385]
 transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.025, 0, 0.98, 0.264)
+visible = false
 material_override = SubResource("ShaderMaterial_0xjk0")
 mesh = SubResource("SphereMesh_foxjk")
 
 [node name="@MeshInstance3D@859" type="MeshInstance3D" parent="Visual" unique_id=1997783689]
 transform = Transform3D(0.035, 0, 0, 0, 0.035, 0, 0, 0, 0.025, 0, 1.17, 0.264)
+visible = false
 material_override = SubResource("ShaderMaterial_0xjk0")
 mesh = SubResource("SphereMesh_kspj4")
 
 [node name="PocketFlap" type="MeshInstance3D" parent="Visual" unique_id=1061001932]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.8, 0.22)
+visible = false
 material_override = SubResource("ShaderMaterial_5ctcy")
 mesh = SubResource("BoxMesh_1jqhq")
 
 [node name="@MeshInstance3D@860" type="MeshInstance3D" parent="Visual" unique_id=809121053]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.8, 0.22)
+visible = false
 material_override = SubResource("ShaderMaterial_5ctcy")
 mesh = SubResource("BoxMesh_hih4f")
 
 [node name="SatchelStrap" type="MeshInstance3D" parent="Visual" unique_id=1837481083]
 transform = Transform3D(-0.77602196, 0.6164799, -0.13320166, -0.6164799, -0.78601205, -0.046235994, -0.13320166, 0.046235994, 0.9900099, 0, 1.025, 0.185)
+visible = false
 material_override = SubResource("ShaderMaterial_prayf")
 mesh = SubResource("CylinderMesh_wjcfi")
 
 [node name="CapBrim" type="MeshInstance3D" parent="Visual" unique_id=618304414]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.67, 0)
+visible = false
 material_override = SubResource("ShaderMaterial_pu2wu")
 mesh = SubResource("CylinderMesh_f55pn")
 
 [node name="LeftLeg" type="Node3D" parent="Visual" unique_id=867460423]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 0.6, 0)
+visible = false
 
 [node name="Trousers" type="MeshInstance3D" parent="Visual/LeftLeg" unique_id=1159356396]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
@@ -405,6 +422,7 @@ mesh = SubResource("BoxMesh_ty8bi")
 
 [node name="LeftArm" type="Node3D" parent="Visual" unique_id=271579054]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 1.2, 0)
+visible = false
 
 [node name="Sleeve" type="MeshInstance3D" parent="Visual/LeftArm" unique_id=1794703555]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
@@ -418,6 +436,7 @@ mesh = SubResource("SphereMesh_vrara")
 
 [node name="RightLeg" type="Node3D" parent="Visual" unique_id=78120027]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.13, 0.6, 0)
+visible = false
 
 [node name="Trousers" type="MeshInstance3D" parent="Visual/RightLeg" unique_id=2088298466]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
@@ -431,6 +450,7 @@ mesh = SubResource("BoxMesh_ulcpu")
 
 [node name="RightArm" type="Node3D" parent="Visual" unique_id=420318069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 1.2, 0)
+visible = false
 
 [node name="Sleeve" type="MeshInstance3D" parent="Visual/RightArm" unique_id=1521367572]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
@@ -476,8 +496,11 @@ mesh = SubResource("CylinderMesh_188cw")
 
 [node name="Satchel" type="MeshInstance3D" parent="Visual" unique_id=551221457]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -0.25)
+visible = false
 material_override = SubResource("ShaderMaterial_jcux5")
 mesh = SubResource("BoxMesh_vu0ht")
+
+[node name="RiggedModel" type="Node3D" parent="Visual" unique_id=335537065 instance=ExtResource("3_ib7s3")]
 
 [node name="HandLantern" type="OmniLight3D" parent="." unique_id=667214424]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.2)

@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/shadow.gd" id="1_0rvn4"]
+[ext_resource type="PackedScene" path="res://assets/models/characters/shadow_v01.glb" id="2_jqplm"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_6b2k5"]
 radius = 0.28
@@ -56,30 +57,38 @@ shape = SubResource("CapsuleShape3D_6b2k5")
 
 [node name="Silhouette" type="MeshInstance3D" parent="Visual" unique_id=593059157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_bs2fw")
 
 [node name="Head" type="MeshInstance3D" parent="Visual" unique_id=301073462]
 transform = Transform3D(0.36, 0, 0, 0, 0.48, 0, 0, 0, 0.34, 0, 1.93, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("SphereMesh_fvdbd")
 
 [node name="Arm" type="MeshInstance3D" parent="Visual" unique_id=457789718]
 transform = Transform3D(-0.74422085, -0.29049417, 0.60145545, 0.29049417, -0.95161927, -0.1001704, 0.60145545, 0.1001704, 0.7926016, -0.355, 0.825, 0.05)
+visible = false
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_arb4i")
 
 [node name="Eye" type="MeshInstance3D" parent="Visual" unique_id=341307375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 1.99, 0.15)
+visible = false
 material_override = SubResource("StandardMaterial3D_tkqwg")
 mesh = SubResource("BoxMesh_kimjs")
 
 [node name="@MeshInstance3D@864" type="MeshInstance3D" parent="Visual" unique_id=1406228028]
 transform = Transform3D(-0.74422085, 0.29049417, -0.60145545, -0.29049417, -0.95161927, -0.1001704, -0.60145545, 0.1001704, 0.7926016, 0.355, 0.825, 0.05)
+visible = false
 material_override = SubResource("StandardMaterial3D_jqplm")
 mesh = SubResource("CylinderMesh_piu8t")
 
 [node name="@MeshInstance3D@865" type="MeshInstance3D" parent="Visual" unique_id=1151996178]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 1.99, 0.15)
+visible = false
 material_override = SubResource("StandardMaterial3D_tkqwg")
 mesh = SubResource("BoxMesh_jfb8u")
+
+[node name="RiggedModel" type="Node3D" parent="Visual" unique_id=987242431 instance=ExtResource("2_jqplm")]

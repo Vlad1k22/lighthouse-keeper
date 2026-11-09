@@ -1,9 +1,9 @@
 {
-  "verified_at": "2026-10-26T07:11:30.4249925+03:00",
+  "verified_at": "2026-11-09T03:47:56.791335+03:00",
   "engine": "Godot 4.7.2 stable",
   "status": "passed",
-  "passed": 462,
-  "total": 462,
+  "passed": 574,
+  "total": 574,
   "suites": [
     {
       "passed": 32,
@@ -16,8 +16,8 @@
       "name": "fishing"
     },
     {
-      "passed": 21,
-      "total": 21,
+      "passed": 22,
+      "total": 22,
       "name": "provisions"
     },
     {
@@ -56,25 +56,65 @@
       "name": "radio_asset"
     },
     {
-      "passed": 208,
-      "total": 208,
+      "passed": 16,
+      "total": 16,
+      "name": "lighthouse_asset"
+    },
+    {
+      "passed": 14,
+      "total": 14,
+      "name": "lighthouse_interior"
+    },
+    {
+      "passed": 49,
+      "total": 49,
+      "name": "building_interiors"
+    },
+    {
+      "passed": 28,
+      "total": 28,
+      "name": "characters"
+    },
+    {
+      "passed": 28,
+      "total": 28,
+      "name": "first_watch"
+    },
+    {
+      "passed": 29,
+      "total": 29,
+      "name": "first_shift_demo"
+    },
+    {
+      "passed": 13,
+      "total": 13,
+      "name": "game_polish"
+    },
+    {
+      "passed": 19,
+      "total": 19,
+      "name": "backpack_salvage"
+    },
+    {
+      "passed": 123,
+      "total": 123,
       "name": "campaign"
     }
   ],
   "campaign": {
-    "nominal_timer_seconds": 1897,
-    "journal_entries": 72,
-    "full_month_method": "Real station handlers and authored rewards; no inventory grants during the full-month run; automated teleport between stations. Physical routes have separate regression checks.",
-    "days": 30,
-    "human_playtest_duration": "not measured",
+    "days": 14,
+    "playable_nights": 13,
+    "authored_goals": 28,
+    "nominal_timer_seconds": 847,
+    "nominal_timer_minutes": "14:07",
+    "journal_entries": 27,
     "supply_interactions": {
-      "scrap": 4,
-      "wood": 11,
-      "cache": 0,
-      "fuel": 2
+      "wood": 7,
+      "scrap": 3,
+      "fuel": 1,
+      "cache": 0
     },
-    "nominal_timer_minutes": "31:37",
-    "playable_nights": 29
+    "checks": 123
   },
   "native_godot_smoke": {
     "screenshots": [
@@ -82,7 +122,8 @@
       "map-and-plan.png",
       "night-event.png",
       "journal-code.png",
-      "radio-code.png"
+      "radio-code.png",
+      "first-watch-window.png"
     ],
     "verified": [
       "code input Enter and Escape",
@@ -90,8 +131,31 @@
       "mirror double movement",
       "checkpoint retry and manual slot isolation",
       "legacy save migration",
-      "30-day departure gate"
+      "14-day dates on map and radio prompt",
+      "first-watch apparition rendered in the cabin cutaway"
     ]
   },
-  "campaign_data_sha256": "1AF7DBEC2B05C2D9B9821E4D587E0567AF61B0CB1CCA694C14C4B98CAD225F98"
+  "campaign_data_sha256": "FCCD5FA04F38E5CB35364EEF809F20B656E4ED2B42500AA5D2B24AF6D07BEAC4",
+  "legacy_campaign": {
+    "days": 30,
+    "playable_nights": 29,
+    "authored_goals": 59,
+    "nominal_timer_seconds": 1901,
+    "nominal_timer_minutes": "31:41",
+    "journal_entries": 73,
+    "supply_interactions": {
+      "wood": 11,
+      "scrap": 4,
+      "fuel": 2,
+      "cache": 0
+    },
+    "checks": 212
+  },
+  "method": "Automated station handlers and authored rewards, without inventory grants. Movement between stations is simulated by placement. Physical routes have separate regression checks. Human playtest duration has not been measured.",
+  "windows_release": {
+    "verified": "Standalone executable starts from its own directory on the development PC",
+    "engine": "Godot 4.7.2",
+    "video": "Native 960 x 600, fullscreen, restored window",
+    "audio": "Native playback of menu, gramophone and ending tracks"
+  }
 }

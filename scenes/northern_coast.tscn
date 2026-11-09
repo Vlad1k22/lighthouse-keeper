@@ -3430,7 +3430,7 @@ mesh = SubResource("BoxMesh_drc6i")
 [node name="@CollisionShape3D@4" type="CollisionShape3D" parent="WarehouseSide/Collision" unique_id=1842353075]
 shape = SubResource("BoxShape3D_hera8")
 
-[node name="@MeshInstance3D@5" type="MeshInstance3D" parent="." unique_id=1084952472]
+[node name="@MeshInstance3D@5" type="MeshInstance3D" parent="." unique_id=1084952472 groups=["warehouse_cutaway"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 2.65, -31)
 material_override = SubResource("ShaderMaterial_vm4d2")
 mesh = SubResource("BoxMesh_i8d5w")
@@ -3440,7 +3440,7 @@ mesh = SubResource("BoxMesh_i8d5w")
 [node name="@CollisionShape3D@6" type="CollisionShape3D" parent="@MeshInstance3D@5/Collision" unique_id=178931835]
 shape = SubResource("BoxShape3D_wntrt")
 
-[node name="WarehouseFront" type="MeshInstance3D" parent="." unique_id=861199075]
+[node name="WarehouseFront" type="MeshInstance3D" parent="." unique_id=861199075 groups=["warehouse_cutaway"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 2.65, -28)
 material_override = SubResource("ShaderMaterial_2pv5s")
 mesh = SubResource("BoxMesh_vx2ax")
@@ -3450,7 +3450,7 @@ mesh = SubResource("BoxMesh_vx2ax")
 [node name="@CollisionShape3D@7" type="CollisionShape3D" parent="WarehouseFront/Collision" unique_id=472824769]
 shape = SubResource("BoxShape3D_c0n05")
 
-[node name="@MeshInstance3D@8" type="MeshInstance3D" parent="." unique_id=230663547]
+[node name="@MeshInstance3D@8" type="MeshInstance3D" parent="." unique_id=230663547 groups=["warehouse_cutaway"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.8, 2.65, -28)
 material_override = SubResource("ShaderMaterial_vm4d2")
 mesh = SubResource("BoxMesh_d3isd")
@@ -3460,17 +3460,17 @@ mesh = SubResource("BoxMesh_d3isd")
 [node name="@CollisionShape3D@9" type="CollisionShape3D" parent="@MeshInstance3D@8/Collision" unique_id=377792921]
 shape = SubResource("BoxShape3D_wncm0")
 
-[node name="CorrugatedRoof" type="MeshInstance3D" parent="." unique_id=1335544125]
+[node name="CorrugatedRoof" type="MeshInstance3D" parent="." unique_id=1335544125 groups=["warehouse_cutaway"]]
 transform = Transform3D(0.98722726, -0.15931821, 0, 0.15931821, 0.98722726, 0, 0, 0, 1, 4.9, 4.65, -31)
 material_override = SubResource("ShaderMaterial_mwhga")
 mesh = SubResource("BoxMesh_na7kw")
 
-[node name="@MeshInstance3D@10" type="MeshInstance3D" parent="." unique_id=35412057]
+[node name="@MeshInstance3D@10" type="MeshInstance3D" parent="." unique_id=35412057 groups=["warehouse_cutaway"]]
 transform = Transform3D(0.98722726, 0.15931821, 0, -0.15931821, 0.98722726, 0, 0, 0, 1, 9.1, 4.65, -31)
 material_override = SubResource("ShaderMaterial_g5sgi")
 mesh = SubResource("BoxMesh_5crp1")
 
-[node name="SupplyCrate" type="Node3D" parent="." unique_id=1130283799]
+[node name="SupplyCrate" type="Node3D" parent="." unique_id=1130283799 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 1, -32)
 
 [node name="Wood" type="MeshInstance3D" parent="SupplyCrate" unique_id=724923226]
@@ -3503,7 +3503,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.44)
 material_override = SubResource("ShaderMaterial_xptsq")
 mesh = SubResource("BoxMesh_icxy1")
 
-[node name="@Node3D@14" type="Node3D" parent="." unique_id=645533104]
+[node name="@Node3D@14" type="Node3D" parent="." unique_id=645533104 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1, -32)
 
 [node name="Wood" type="MeshInstance3D" parent="@Node3D@14" unique_id=1887263568]
@@ -3536,7 +3536,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.44)
 material_override = SubResource("ShaderMaterial_elc4l")
 mesh = SubResource("BoxMesh_2olrc")
 
-[node name="@Node3D@18" type="Node3D" parent="." unique_id=432396052]
+[node name="@Node3D@18" type="Node3D" parent="." unique_id=432396052 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 1, -30.8)
 
 [node name="Wood" type="MeshInstance3D" parent="@Node3D@18" unique_id=1070560394]
@@ -3569,7 +3569,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.44)
 material_override = SubResource("ShaderMaterial_elc4l")
 mesh = SubResource("BoxMesh_y0qdq")
 
-[node name="@Node3D@22" type="Node3D" parent="." unique_id=403893769]
+[node name="@Node3D@22" type="Node3D" parent="." unique_id=403893769 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1, -30.8)
 
 [node name="Wood" type="MeshInstance3D" parent="@Node3D@22" unique_id=1746604867]
@@ -3602,7 +3602,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.44)
 material_override = SubResource("ShaderMaterial_elc4l")
 mesh = SubResource("BoxMesh_iuaud")
 
-[node name="ToolTable" type="MeshInstance3D" parent="." unique_id=1200078023]
+[node name="ToolTable" type="MeshInstance3D" parent="." unique_id=1200078023 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.9, -33)
 material_override = SubResource("ShaderMaterial_0vcfn")
 mesh = SubResource("BoxMesh_7jj31")
@@ -3667,12 +3667,12 @@ visible = false
 material_override = SubResource("StandardMaterial3D_0dte1")
 mesh = SubResource("TorusMesh_o3qwa")
 
-[node name="MedicalCabinet" type="MeshInstance3D" parent="." unique_id=1803338062]
+[node name="MedicalCabinet" type="MeshInstance3D" parent="." unique_id=1803338062 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.8, 2, -29.6)
 material_override = SubResource("ShaderMaterial_dujom")
 mesh = SubResource("BoxMesh_yvsad")
 
-[node name="MedicalCross" type="MeshInstance3D" parent="." unique_id=2096826455]
+[node name="MedicalCross" type="MeshInstance3D" parent="." unique_id=2096826455 groups=["warehouse_replaced"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.65, 2, -29.6)
 material_override = SubResource("ShaderMaterial_m8jpp")
 mesh = SubResource("BoxMesh_q5ppd")
@@ -3719,17 +3719,19 @@ mesh = SubResource("BoxMesh_owmb7")
 
 [node name="@Label3D@31" type="Label3D" parent="." unique_id=288102619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 2.65, -27.130001)
-pixel_size = 0.009
+pixel_size = 0.0062
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "СТАРЫЙ СКЛАД"
 font_size = 48
+outline_size = 3
 
 [node name="@Label3D@32" type="Label3D" parent="." unique_id=2000410488]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4, 2.33, -27.130001)
-pixel_size = 0.0045
+pixel_size = 0.00327
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "Инструменты / детали / аптечка"
 font_size = 48
+outline_size = 3
 
 [node name="RadioHut" type="MeshInstance3D" parent="." unique_id=874010436]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2.15, -39.5)
@@ -3861,17 +3863,19 @@ mesh = SubResource("BoxMesh_h4noa")
 
 [node name="@Label3D@45" type="Label3D" parent="." unique_id=394647920]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2.65, -34.93)
-pixel_size = 0.009
+pixel_size = 0.0062
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "РАДИОСТАНЦИЯ"
 font_size = 48
+outline_size = 3
 
 [node name="@Label3D@46" type="Label3D" parent="." unique_id=1446205082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2.33, -34.93)
-pixel_size = 0.0045
+pixel_size = 0.00418
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "Частота спасателей 104.6"
 font_size = 48
+outline_size = 3
 
 [node name="WellStone" type="MeshInstance3D" parent="." unique_id=1129638213]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, -23)
@@ -4128,17 +4132,19 @@ mesh = SubResource("BoxMesh_0eq1l")
 
 [node name="@Label3D@76" type="Label3D" parent="." unique_id=1535357471]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.65, -37.93)
-pixel_size = 0.009
+pixel_size = 0.0062
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "ОСТОВ ЛОДКИ"
 font_size = 48
+outline_size = 3
 
 [node name="@Label3D@77" type="Label3D" parent="." unique_id=1643530719]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.33, -37.93)
-pixel_size = 0.0045
+pixel_size = 0.00325
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "Высадка запрещена. 30 октября."
 font_size = 48
+outline_size = 3
 
 [node name="HarborFoundation" type="MeshInstance3D" parent="." unique_id=2014634843]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.5, 0.7, -21)
@@ -4863,10 +4869,11 @@ mesh = SubResource("BoxMesh_yn3bh")
 
 [node name="@Label3D@186" type="Label3D" parent="." unique_id=1712916347]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.65, -18.93)
-pixel_size = 0.009
+pixel_size = 0.0062
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "СТАРАЯ ГАВАНЬ"
 font_size = 48
+outline_size = 3
 
 [node name="@Label3D@187" type="Label3D" parent="." unique_id=1406526083]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2.33, -18.93)
@@ -4874,6 +4881,7 @@ pixel_size = 0.0045
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "← Катер «Северный»"
 font_size = 48
+outline_size = 3
 
 [node name="CampfireStones" type="MeshInstance3D" parent="." unique_id=1965068720]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1.07, -28)
@@ -6719,10 +6727,11 @@ mesh = SubResource("BoxMesh_bcn1e")
 
 [node name="@Label3D@786" type="Label3D" parent="." unique_id=1027090694]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.65, -16.93)
-pixel_size = 0.009
+pixel_size = 0.0062
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "СЕВЕРНЫЙ БЕРЕГ"
 font_size = 48
+outline_size = 3
 
 [node name="@Label3D@787" type="Label3D" parent="." unique_id=99052497]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 2.33, -16.93)
@@ -6730,6 +6739,7 @@ pixel_size = 0.0045
 modulate = Color(0.7764706, 0.74509805, 0.627451, 1)
 text = "← ГАВАНЬ    СКЛАД →"
 font_size = 48
+outline_size = 3
 
 [node name="RadioOutpost" type="Node3D" parent="." unique_id=271146088]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 1, -39.5)

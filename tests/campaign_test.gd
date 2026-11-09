@@ -1,5 +1,5 @@
 extends SceneTree
-## Full 30-day economy/story run through real station handlers. No inventory injection.
+## Full economy/story run through real station handlers. No inventory injection.
 var game: Node
 var checks := 0
 var failures := 0
@@ -17,6 +17,16 @@ func station(id: String) -> Area3D:
 	return null
 func take(id: String) -> bool:
 	if game.journal_open:game.close_journal()
+	if id=="lighthouse_lens":
+		game.set_lighthouse_interior(true)
+		game.player.position = game.LIGHTHOUSE_INTERIOR.ORIGIN + Vector3(1,game.LIGHTHOUSE_INTERIOR.TOP,.76)
+		game.lighthouse_action()
+		game.set_lighthouse_interior(false)
+		return "c:1:2" in game.journal_entries
+	if id=="shelter" and game.day==1:
+		game.set_building_interior("cabin")
+		game.player.position = game.building_interiors.actions["shelter"]
+		return game.attempt_interaction(station(id))
 	var item := station(id)
 	game.player.position = item.position+Vector3(0,.3,.85)
 	game.player.velocity = Vector3.ZERO
@@ -42,28 +52,34 @@ func run() -> void:
 	root.add_child(game)
 	await process_frame
 	game.checkpoints_enabled = false
-	game.save_path = "user://automated_campaign_v4.json"
 	game.start_shift()
+	var legacy_run := "--legacy-calendar" in OS.get_cmdline_user_args()
+	if legacy_run:game.campaign.select_calendar(30)
+	var days := 30 if legacy_run else 14
+	game.save_path = "user://automated_campaign_%d.json" % days
+	var clue_days := [9,17,26] if legacy_run else [5,8,11]
 	game.hours_per_second = 0
 	game.set_process(false)
-	check(game.campaign.enabled and game.campaign.shifts.size()==30,"New game starts the full 30-day campaign")
+	check(game.campaign.enabled and game.campaign.shifts.size()==days,"The selected campaign has %d shifts" % days)
 	var titles := {}
 	var known_ids := {}
 	for item in game.stations:known_ids[item.station_id]=true
+	known_ids["lighthouse_lens"]=true
 	var valid := true
 	var nominal_seconds := 0.0
 	for record in game.campaign.shifts:
 		titles[record.title]=true
 		for goal in record.goals:valid=valid and known_ids.has(goal.id)
 		nominal_seconds += float(record.night.seconds)
-	nominal_seconds += game.campaign.DAY_SECONDS*29
-	check(titles.size()==30 and valid,"Thirty distinct shifts refer only to reachable existing stations")
-	check(nominal_seconds>=1800 and nominal_seconds<2400,"Nominal 30-day clock fits approximately 30-40 minutes")
+	nominal_seconds += game.campaign.DAY_SECONDS*(days-1)
+	check(titles.size()==days and valid,"All distinct shifts refer only to reachable existing stations")
+	check(nominal_seconds>=1800 and nominal_seconds<2400 if legacy_run else nominal_seconds>=780 and nominal_seconds<960,"The nominal timer fits the selected campaign length")
 	check(not take("shelter") and not game.campaign.state.night,"Night cannot be skipped before the first objectives")
-	check(not game.campaign.submit_code("314"),"Correct radio code cannot bypass the campaign before day 29")
+	game.set_building_interior("")
+	check(not game.campaign.submit_code("314"),"Correct radio code cannot bypass the campaign before the final watch")
 	check(game.campaign.journal_entry("c:code").text.contains("? · ? · ?"),"Code bookmark does not reveal undiscovered fragments")
 	var mid_night_snapshot := ""
-	for number in range(1,31):
+	for number in range(1,days+1):
 		check(game.day==number,"Calendar opens authored day "+str(number))
 		for guard in 8:
 			var index: int = game.campaign.next_index()
@@ -124,7 +140,7 @@ func run() -> void:
 				check(game.campaign.goal_done(0) and not game.campaign.code_open() and not game.paused,"Enter submits the real radio-code UI and resumes play")
 		check(game.campaign.day_complete(),"Day "+str(number)+" objectives complete using real resources")
 		check(game.inventory.wood>=0 and int(game.expedition.state.scrap)>=0 and game.inventory.fuel>=0,"Day "+str(number)+" does not overdraw inventory")
-		if number==30:break
+		if number==days:break
 		if game.hunger<25:
 			check(meals(1) and game.eat(),"Available meals cover night preparation")
 		if int(game.campaign.state.beacon_charge)<=0:reserve({"fuel":1})
@@ -137,14 +153,17 @@ func run() -> void:
 			check(not take("shelter"),"Preparation requires the hand lantern to be on")
 			game.player.lantern_on=true
 		check(take("shelter") and game.campaign.state.night,"Prepared day "+str(number)+" can start its night early")
-		if number in [1,4,10,29]:check(not take("shelter") and game.day==number,"Night event cannot be bypassed by repeatedly pressing E")
+		if number in [1,4,days-1]:check(not take("shelter") and game.day==number,"Night event cannot be bypassed by repeatedly pressing E")
 		var kind: String = game.campaign.entry().night.kind
-		if number in [1,12,14]:
+		if number==1 or kind in ["siege","double"] and number in [7,10,12,14]:
 			game.spawn_night()
-			check(game.enemies.size()>0 and bool(game.enemies[0].passive)==(number!=12),"Night "+str(number)+" spawns its intended passive or hostile actors")
-			if number==14:
+			if number==1:
+				check(game.enemies.is_empty(),"First night begins quietly before the window cue")
+				game.campaign.advance(6)
+			check(game.enemies.size()>0 and bool(game.enemies[0].passive)==(kind!="siege"),"Night "+str(number)+" spawns its intended passive or hostile actors")
+			if kind=="double":
 				var double: CharacterBody3D=game.enemies[0]
-				check(double.has_node("Visual/Head") and double.mirroring,"Double event reuses the keeper visual and mirrors movement")
+				check(double.kind == "keeper" and double.motion.skeleton != null and double.mirroring,"Double event reuses the keeper rig and mirrors movement")
 				var move := InputEventKey.new()
 				move.physical_keycode=KEY_D
 				move.pressed=true
@@ -155,7 +174,7 @@ func run() -> void:
 				Input.parse_input_event(move)
 				for frame in 20:await physics_frame
 				check(Vector2(double.velocity.x,double.velocity.z).length()<.01,"Double stops when the keeper stops")
-		if number==17:
+		if number==clue_days[1]:
 			game.campaign.advance(5)
 			game.expedition.open_board()
 			game.hours_per_second=.055
@@ -167,41 +186,61 @@ func run() -> void:
 			mid_night_snapshot=FileAccess.get_file_as_string(game.save_path)
 			game.campaign.state.blackout=false
 			game.player.lantern_on=false
-			check(game.load_game() and game.campaign.state.blackout and game.campaign.state.night_clock==5 and game.player.lantern_on,"Load restores pending blackout, night timer and lantern")
+			check(game.load_game() and game.campaign.calendar_days()==days and game.campaign.state.blackout and game.campaign.state.night_clock==5 and game.player.lantern_on,"Load restores the calendar, pending blackout, night timer and lantern")
 		if kind=="last":check(not take("radio") and not game.campaign.state.event_done,"Final night requires power before the confirming radio call")
 		if kind in ["blackout","last"]:
 			var fuel_before: int = game.inventory.fuel
 			check(take("beacon") and not game.campaign.state.blackout and game.lighthouse_on and game.inventory.fuel==fuel_before,"Night "+str(number)+" power reset is interactive and does not double-charge fuel")
-		if kind in ["static","false_call","last"]:check(take("radio") and game.campaign.state.event_done,"Night "+str(number)+" radio event requires the correct physical receiver")
-		game.player.position=station("shelter").position+Vector3(0,.3,.5)
+		if kind in ["static","false_call","last"]:
+			var heard := take("radio")
+			if not legacy_run and number in [11,13]:
+				check(heard and game.hud.tuner.visible,"Night "+str(number)+" opens radio verification")
+				game.hud.tuner.verify(0)
+				check(not game.campaign.state.event_done,"A call with a mismatched field cannot clear the night")
+				game.hud.tuner.verify(2 if number==13 else 1)
+			check(heard and game.campaign.state.event_done,"Night "+str(number)+" radio event requires the correct physical receiver")
+		game.player.position=game.building_interiors.actions["shelter"] if number==1 else station("shelter").position+Vector3(0,.3,.5)
 		for second in ceili(float(game.campaign.entry().night.seconds))+1:game.campaign.advance(1)
 		check(take("shelter") and game.day==number+1 and game.campaign.state.completed_days.size()==number,"Night "+str(number)+" ends in a single persistent dawn")
-	check(game.campaign.state.clearance and game.expedition.ready_to_sail(),"Only the completed month opens the real departure window")
-	game.day=29
+		if number==1:game.set_building_interior("")
+	check(game.campaign.state.clearance and game.expedition.ready_to_sail(),"Only the completed campaign opens the real departure window")
+	game.day=days-1
 	check(not game.expedition.ready_to_sail(),"Even a fully equipped vessel cannot skip the final calendar gate")
-	game.day=30
+	game.day=days
 	game.campaign.ensure_day()
-	check(game.campaign.journal_entry("c:9:0").text.contains("3") and game.campaign.journal_entry("c:17:0").text.contains("1") and game.campaign.journal_entry("c:26:0").text.contains("4"),"All three code fragments remain readable from journal records")
+	check(game.campaign.journal_entry("c:code").text.contains("3 · 1 · 4") and game.campaign.clue_days()==clue_days,"All three code fragments remain readable on the selected dates")
 	game.campaign.advance(10000)
-	check(game.day==30 and not game.finished and not game.is_night(),"Final day cannot roll into an accidental day-31 failure")
+	check(game.day==days and not game.finished and not game.is_night(),"Final day cannot roll into an accidental extra-day failure")
 	var completed_journal: int = game.journal_entries.size()
-	game.checkpoint_path="user://automated_campaign_win_checkpoint.json"
+	game.checkpoint_path="user://automated_campaign_win_checkpoint_%d.json" % days
+	var win_checkpoint: String = game.checkpoint_path
 	game.checkpoints_enabled=true
 	game.save_checkpoint()
-	check(take("ship_helm") and game.expedition.sailing,"Day-30 helm starts the real vessel departure")
+	check(take("ship_helm") and game.expedition.sailing,"The final-day helm starts the real vessel departure")
 	game.expedition.advance(7)
-	check(game.finished and game.hud.menu_title.text.contains("материк"),"Prepared 30-day campaign reaches its playable ending")
+	check(game.finished and game.hud.menu_title.text.contains("материк"),"Prepared campaign reaches its playable ending")
 	game.start_or_resume()
-	check(game.day==1 and not game.finished and game.campaign.enabled,"New-game button after victory starts day one rather than retrying the final day")
+	check(game.day==1 and game.campaign.calendar_days()==14 and not game.finished and game.campaign.enabled,"New-game button after victory starts the current calendar on day one")
 	# Separate checkpoint and legacy migration fixtures, without writing to a real player save.
 	var legacy: Dictionary = JSON.parse_string(mid_night_snapshot)
 	legacy.version=3
+	legacy.day=17
 	legacy.erase("campaign")
+	legacy.erase("calendar_days")
+	legacy.journal=[]
 	var file := FileAccess.open(game.save_path,FileAccess.WRITE)
 	file.store_string(JSON.stringify(legacy))
 	file.close()
-	check(game.load_game() and game.day==17 and game.campaign.enabled and game.campaign.state.completed_days.size()==16,"Version-three saves retain progress and migrate into the authored month")
+	check(game.load_game() and game.day==17 and game.campaign.calendar_days()==30 and game.campaign.state.completed_days.size()==16,"Version-three saves retain progress in the original month")
 	check(game.campaign.state.night and game.campaign.state.blackout and game.campaign.journal_entry("c:code").text.contains("3 · 1 · ?"),"Legacy night resumes its event and receives required archive clues instead of losing the code")
+	check(game.save_game(true),"The original calendar can be saved in the new format")
+	var version_four: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(game.save_path))
+	version_four.version = 4
+	version_four.erase("calendar_days")
+	file = FileAccess.open(game.save_path,FileAccess.WRITE)
+	file.store_string(JSON.stringify(version_four))
+	file.close()
+	check(game.load_game() and game.day==17 and game.campaign.calendar_days()==30 and game.campaign.state.night,"Version-four saves reopen the original campaign and night")
 	game.day=30
 	game.campaign.ensure_day()
 	game.expedition.state.merge({"signal":false,"hull":false,"engine":false,"ship_fuel":false,"scrap":0,"visits":{},"daily":{}},true)
@@ -214,7 +253,7 @@ func run() -> void:
 	game.campaign.ensure_day()
 	game.hour=7
 	game.health=71
-	game.checkpoint_path="user://automated_campaign_checkpoint.json"
+	game.checkpoint_path="user://automated_campaign_checkpoint_%d.json" % days
 	game.checkpoints_enabled=true
 	game.save_checkpoint()
 	game.health=53
@@ -229,12 +268,25 @@ func run() -> void:
 	game.finish_shift(false)
 	check(game.retry_day() and game.day==18 and game.health==71 and game.campaign.state.day==18,"Death retry restores the beginning of the day instead of resetting the month")
 	check(FileAccess.get_file_as_string(game.save_path)==manual_before,"Automatic checkpoint leaves the manual save untouched")
+	var incompatible: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(game.checkpoint_path))
+	game.start_shift()
+	game.day=8
+	incompatible.day=8
+	checkpoint_file = FileAccess.open(game.checkpoint_path,FileAccess.WRITE)
+	checkpoint_file.store_string(JSON.stringify(incompatible))
+	checkpoint_file.close()
+	game.save_game()
+	var short_save: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(game.save_path))
+	check(not short_save.has("day_checkpoint"),"A same-day checkpoint from the other calendar stays out of a short save")
+	check(game.load_game() and game.campaign.calendar_days()==14 and game.day==8 and game.retry_day() and game.campaign.calendar_days()==14 and game.day==8,"Loading replaces a mismatched checkpoint with one for the current calendar")
 	game.start_demo()
 	check(not game.campaign.enabled and game.day==5,"Harbor asset demonstration remains a separate free-roam fixture")
 	game.start_or_resume()
-	check(game.campaign.enabled and game.day==1,"Starting a normal game after the demo restores the 30-day campaign")
+	check(game.campaign.enabled and game.campaign.calendar_days()==14 and game.day==1,"Starting a normal game after the demo opens the 14-day campaign")
 	print("CAMPAIGN_METRICS nominal_seconds=",nominal_seconds," supply_interactions=",supplies," completed_journal_entries=",completed_journal)
 	print("RESULT: ",checks-failures,"/",checks," campaign checks passed")
+	for path in [game.save_path, game.checkpoint_path, win_checkpoint]:
+		DirAccess.remove_absolute(path)
 	game.queue_free()
 	await create_timer(.3).timeout
 	quit(0 if failures==0 else 1)

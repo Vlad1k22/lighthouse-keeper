@@ -7,33 +7,64 @@ var rainfall: AudioStreamPlayer
 var drone: AudioStreamPlayer
 var radio: AudioStreamPlayer
 var engine: AudioStreamPlayer
+var music: AudioStreamPlayer
 var horror_cache := {}
+const TITLE_THEME = preload("res://assets/audio/music/menu_tide.wav")
+const END_THEME = preload("res://assets/audio/music/morning_signal.wav")
 
 func _ready() -> void:
 	sea = AudioStreamPlayer.new()
 	sea.stream = noise_stream(5.0, 0)
+	sea.bus = "Environment"
 	sea.volume_db = -25
 	add_child(sea)
 	sea.play()
 	steps = AudioStreamPlayer.new()
 	steps.stream = noise_stream(0.13, 1)
+	steps.bus = "Environment"
 	steps.volume_db = -17
 	add_child(steps)
 	effect = AudioStreamPlayer.new()
 	effect.stream = noise_stream(0.3, 2)
+	effect.bus = "Environment"
 	effect.volume_db = -20
 	add_child(effect)
 	rainfall = looping_player(3, 3.0)
 	drone = looping_player(4, 6.0)
 	radio = AudioStreamPlayer.new()
 	radio.stream = noise_stream(0.85, 5)
+	radio.bus = "Environment"
 	radio.volume_db = -23
 	add_child(radio)
 	engine = looping_player(6,4.0)
+	music = AudioStreamPlayer.new()
+	music.bus = "Music"
+	music.volume_db = -13
+	add_child(music)
+
+func set_music(screen: String) -> void:
+	match screen:
+		"title":
+			music.stream = repeat_track(TITLE_THEME)
+			music.play()
+		"win", "demo_win":
+			music.stream = END_THEME
+			music.play()
+		_:
+			music.stop()
+			music.stream = null
+
+func repeat_track(source: AudioStreamWAV) -> AudioStreamWAV:
+	var track := source.duplicate() as AudioStreamWAV
+	track.loop_begin = 0
+	track.loop_end = roundi(track.get_length()*track.mix_rate)
+	track.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	return track
 
 func looping_player(kind: int, duration: float) -> AudioStreamPlayer:
 	var audio := AudioStreamPlayer.new()
 	audio.stream = noise_stream(duration, kind)
+	audio.bus = "Environment"
 	audio.volume_db = -70
 	add_child(audio)
 	audio.play()
@@ -113,6 +144,7 @@ func horror_cue(kind: String, at: Vector3) -> void:
 	var type: int = {"knock":7,"whisper":8,"radio":9,"steps":1}.get(kind,8)
 	if not horror_cache.has(type):horror_cache[type]=noise_stream(.75 if type!=1 else .18,type)
 	var cue := AudioStreamPlayer3D.new()
+	cue.bus = "Environment"
 	cue.stream = horror_cache[type]
 	cue.unit_size = 7
 	cue.max_distance = 55
@@ -123,7 +155,7 @@ func horror_cue(kind: String, at: Vector3) -> void:
 	cue.play()
 
 func _exit_tree() -> void:
-	for audio_player in [sea, steps, effect, rainfall, drone, radio, engine]:
+	for audio_player in [sea, steps, effect, rainfall, drone, radio, engine, music]:
 		if is_instance_valid(audio_player):
 			audio_player.stop()
 			audio_player.stream = null

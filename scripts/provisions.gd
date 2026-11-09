@@ -32,12 +32,34 @@ static func fish_item(id: String, grams: int) -> Dictionary:
 static func ration() -> Dictionary:
 	return {"kind": "ration", "name": "Паёк", "rarity": "common", "weight": 0}
 
+static func crafted(fish: Dictionary, recipe: String, quality: bool) -> Dictionary:
+	var meal := fish.duplicate()
+	meal.recipe = recipe
+	meal.quality = quality
+	meal.name = "Уха" if recipe=="soup" else "Копчёная рыба"
+	return meal
+
+static func cargo_index(meals: Array) -> int:
+	for i in range(meals.size()-1,-1,-1):
+		if meals[i].get("recipe","")=="smoked":
+			return i
+	return meals.size()-1
+
 static func bonuses(item: Dictionary) -> Dictionary:
 	if item.get("kind", "") == "ration":
 		return {"health": 5, "hunger": 35}
 	var rarity: Dictionary = RARITIES.get(item.get("rarity", "common"), RARITIES.common)
 	var grams := int(item.get("weight", 300))
-	return {"health": roundi(float(rarity.health) + grams * 0.008), "hunger": roundi(float(rarity.hunger) + grams * 0.015)}
+	var health := roundi(float(rarity.health) + grams * 0.008)
+	var hunger := roundi(float(rarity.hunger) + grams * 0.015)
+	var good := bool(item.get("quality",false))
+	match item.get("recipe",""):
+		"soup":
+			health += 4 if good else 2
+			hunger += 13 if good else 8
+		"smoked":
+			hunger += 8 if good else 4
+	return {"health":health,"hunger":hunger}
 
 static func rarity_name(item: Dictionary) -> String:
 	return str(RARITIES.get(item.get("rarity", "common"), RARITIES.common).name)
@@ -61,7 +83,8 @@ static func restore(raw: Variant, count: int, cooked: bool) -> Array[Dictionary]
 			elif value.get("weight") is float or value.get("weight") is int:
 				var item := fish_item(str(value.get("species", "")), int(value.weight))
 				if not item.is_empty():
-					result.append(item)
+					var recipe := str(value.get("recipe",""))
+					result.append(crafted(item,recipe,bool(value.get("quality",false))) if cooked and recipe in ["soup","smoked"] else item)
 	else:
 		# В старых сохранениях были только количества, без веса и редкости.
 		for index in clampi(count, 0, 999):

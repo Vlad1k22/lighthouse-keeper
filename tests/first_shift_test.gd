@@ -101,7 +101,7 @@ func run() -> void:
 	game.player.lantern_on = false
 	enemy.position = game.player.position + Vector3(0, 0, 0.7)
 	enemy.attack_cooldown = 0
-	await create_timer(0.1).timeout
+	await create_timer(0.39).timeout
 	check(game.health < 100, "Unprotected player takes damage")
 	game.paused = true
 	var old_position := enemy.position
@@ -118,7 +118,7 @@ func run() -> void:
 	key.pressed = true
 	Input.parse_input_event(key)
 	await create_timer(0.5).timeout
-	check(game.player.get_node("WalkAnimation").is_playing(), "AnimationPlayer plays the walking animation")
+	check(game.player.motion.current == "walk" and game.player.motion.animator.is_playing(), "Blender rig plays the walking animation")
 	key.pressed = false
 	Input.parse_input_event(key)
 	check(game.player.position.distance_to(initial_position) > 1.0, "WASD moves CharacterBody3D using physics")

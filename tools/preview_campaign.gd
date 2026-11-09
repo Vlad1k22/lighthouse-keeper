@@ -8,9 +8,9 @@ func run() -> void:
 	game.checkpoints_enabled=false
 	game.start_shift()
 	game.hours_per_second=0
-	game.day=14
+	game.day=7
 	game.hour=17.2
-	game.expedition.state.merge({"tools":true,"battery":true,"signal":true,"pump":true,"hull":true,"engine":true,"last_dawn":14,"scrap":5},true)
+	game.expedition.state.merge({"tools":true,"battery":true,"signal":true,"pump":true,"hull":true,"engine":true,"last_dawn":7,"scrap":5},true)
 	game.barricade_built=true
 	game.build_barricade()
 	game.lighthouse_on=true
@@ -19,14 +19,14 @@ func run() -> void:
 	game.inventory.wood=5
 	game.campaign.ensure_day()
 	game.campaign.state.beacon_charge=3
-	game.campaign.state.completed_days=range(1,14)
+	game.campaign.state.completed_days=range(1,7)
 	game.campaign.state.marks={"0":true,"1":true}
 	game.expedition.update_visuals()
 	game.player.position=Vector3(5.3,1.1,4.3)
 	game.target_zoom=21
 	game.camera_zoom=21
 	game.camera_focus=game.player.position+Vector3(0,1,0)
-	game.notify("День 14 · проверьте подготовку. Бирюзовая цель — следующий шаг. E у хижины приблизит ночь.",15)
+	game.notify("День 7 · проверьте подготовку. E у хижины приблизит ночь.",15)
 	await create_timer(2).timeout
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("res://docs/campaign/day-preparation.png")
@@ -41,16 +41,19 @@ func run() -> void:
 	root.get_texture().get_image().save_png("res://docs/campaign/night-event.png")
 	game.hours_per_second=0
 	game.clear_enemies()
-	game.day=29
+	game.day=game.campaign.final_night()
 	game.hour=14
+	game.message_time=0
 	game.campaign.ensure_day()
-	game.expedition.state.last_dawn=29
-	game.campaign.state.completed_days=range(1,29)
+	game.expedition.state.last_dawn=game.day
+	game.campaign.state.completed_days=range(1,game.day)
 	game.campaign.state.beacon_charge=3
 	game.lighthouse_on=true
 	game.beacon.set_powered(true)
-	for id in ["c:9:0","c:17:0","c:26:0","c:code"]:
+	for day in game.campaign.clue_days():
+		var id := "c:%d:0" % day
 		if id not in game.journal_entries:game.journal_entries.append(id)
+	game.journal_entries.append("c:code")
 	game.player.position=Vector3(-11.5,1.1,-35.35)
 	game.target_zoom=24
 	game.camera_zoom=24

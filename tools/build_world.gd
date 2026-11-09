@@ -38,6 +38,7 @@ func build() -> void:
 	set_owners(world, world)
 	# Attach the Blender visual after procedural styling, preserving its PBR materials.
 	preload("res://scripts/cabin_visual.gd").install(land.get_node("KeeperCabin"))
+	preload("res://scripts/lighthouse_visual.gd").install(land.get_node("Lighthouse"))
 	var packed := PackedScene.new()
 	var result := packed.pack(world)
 	if result == OK:
@@ -145,6 +146,7 @@ func make_characters() -> void:
 func save_character(character: Node3D, path_name: String) -> void:
 	OVERHAUL.apply(character)
 	set_owners(character, character)
+	preload("res://scripts/character_visual.gd").install(character.get_node("Visual"), "keeper" if path_name.ends_with("keeper.tscn") else "shadow")
 	var packed := PackedScene.new()
 	packed.pack(character)
 	ResourceSaver.save(packed, path_name)
