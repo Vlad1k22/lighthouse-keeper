@@ -61,7 +61,7 @@ func setup(world: Node3D) -> void:
 	_light(warehouse, Vector3(.53,2.02,-2.45), Color("ffc490"), 1.26, 5.6)
 	for id in ROOMS:
 		var label := Label3D.new()
-		label.text = "◆  " + ROOMS[id].title
+		label.text = "◆  " + ROOMS[id].title + {"radio":"\nпередатчик · сводка на ночь","ship":"\nштурвал · портрет капитана"}.get(id, "")
 		label.font_size = 30
 		label.pixel_size = .009
 		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

@@ -59,6 +59,11 @@ static func bonuses(item: Dictionary) -> Dictionary:
 			hunger += 13 if good else 8
 		"smoked":
 			hunger += 8 if good else 4
+		"fried":
+			health += 4 if good else 1
+			hunger += 12 if good else 5
+		"burnt":
+			hunger = maxi(4, hunger - 8)
 	return {"health":health,"hunger":hunger}
 
 static func rarity_name(item: Dictionary) -> String:

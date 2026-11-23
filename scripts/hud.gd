@@ -58,6 +58,13 @@ var reader_text: RichTextLabel
 var reader_count: Label
 var previous_page: Button
 var next_page: Button
+var overlay: Control
+var task_panel: Panel
+var fade_rect: ColorRect
+var fading := false
+var beam_bar: ProgressBar
+var beam_label: Label
+const OVERLAY = preload("res://scripts/hud_overlay.gd")
 
 func _ready() -> void:
 	game = get_parent()
@@ -152,9 +159,10 @@ func build_game_ui() -> void:
 	root.add_child(game_ui)
 	text(game_ui, "СМОТРИТЕЛЬ МАЯКА", Rect2(32, 25, 440, 30), 22, PAPER)
 	text(game_ui, "ПУТЬ С ОСТРОВА   /   ОСТРОВ СЕВЕРНЫЙ", Rect2(33, 59, 420, 22), 12, GOLD)
-	panel(game_ui, Rect2(32, 119, 300, 320))
+	task_panel = panel(game_ui, Rect2(32, 119, 300, 320))
 	text(game_ui, "ЖУРНАЛ СМОТРИТЕЛЯ", Rect2(51, 137, 270, 25), 13, GOLD)
 	task_label = text(game_ui, "", Rect2(51, 177, 263, 220), 14)
+	task_label.clip_text = true
 	task_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	panel(game_ui, Rect2(1150, 25, 258, 83))
 	clock_label = text(game_ui, "", Rect2(1168, 38, 224, 33), 23)
@@ -174,9 +182,11 @@ func build_game_ui() -> void:
 	health_bar = progress(game_ui, Rect2(51, 815, 118, 8), Color("c48e78"))
 	hunger_bar = progress(game_ui, Rect2(192, 815, 118, 8), Color("d7b477"))
 	sanity_bar = progress(game_ui, Rect2(332, 815, 118, 8), Color("7da8a3"))
-	stamina_bar = progress(game_ui, Rect2(51, 847, 399, 4), Color("9cbca6"))
+	stamina_bar = progress(game_ui, Rect2(51, 847, 190, 4), Color("9cbca6"))
 	text(game_ui, "ВЫНОСЛИВОСТЬ", Rect2(51, 828, 160, 15), 9, MUTED)
-	warmth_label = text(game_ui,"",Rect2(332,828,118,15),10,MUTED)
+	beam_bar = progress(game_ui, Rect2(260, 847, 190, 4), Color("ffcf7a"))
+	beam_label = text(game_ui, "ЛУЧ ФОНАРЯ · ПКМ", Rect2(260, 828, 120, 15), 9, MUTED)
+	warmth_label = text(game_ui,"",Rect2(392,828,70,15),10,MUTED)
 	panel(game_ui, Rect2(1017, 727, 391, 144))
 	text(game_ui, "РЮКЗАК · B", Rect2(1036, 740, 200, 19), 11, GOLD)
 	inventory_label = text(game_ui, "", Rect2(1036, 766, 354, 40), 15)
@@ -185,8 +195,9 @@ func build_game_ui() -> void:
 	prompt_bg.name = "PromptBackground"
 	prompt_label = text(game_ui, "", Rect2(508, 819, 474, 31), 14)
 	prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	message_label = text(game_ui, "", Rect2(410, 704, 600, 65), 18, GOLD)
+	message_label = text(game_ui, "", Rect2(380, 619, 660, 150), 18, GOLD)
 	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	message_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	message_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message_label.add_theme_color_override("font_shadow_color", Color("102b32"))
 	message_label.add_theme_constant_override("shadow_offset_x", 2)
@@ -197,6 +208,15 @@ func build_game_ui() -> void:
 	demo_hint_panel.hide()
 	movement_help = text(game_ui, "", Rect2(32, 880, 1050, 18), 11, MUTED)
 	text(game_ui, "O обзор  ·  M цели  ·  J записи", Rect2(1132, 880, 276, 18), 11, MUTED)
+	overlay = Control.new()
+	overlay.set_script(OVERLAY)
+	overlay.set("game", game)
+	game_ui.add_child(overlay)
+	fade_rect = ColorRect.new()
+	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	fade_rect.color = Color(0.01, 0.02, 0.03, 0)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(fade_rect)
 	danger = ColorRect.new()
 	danger.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	danger.color = Color(0.5, 0.05, 0.03, 0)
@@ -339,6 +359,15 @@ func layout_menu_buttons(mode: String) -> void:
 	for button in [start_button, settings_button, continue_button, exit_button]:
 		button.size = Vector2(310, 51)
 
+## Короткое затемнение экрана: действие выполняется в момент полной темноты.
+func fade_through(action: Callable, half: float = .22) -> void:
+	fading = true
+	var tween := create_tween()
+	tween.tween_property(fade_rect, "color:a", 1.0, half)
+	tween.tween_callback(action)
+	tween.tween_property(fade_rect, "color:a", 0.0, half)
+	tween.tween_callback(func(): fading = false)
+
 func show_game() -> void:
 	if is_instance_valid(reader):
 		reader.hide()
@@ -408,7 +437,7 @@ func refresh() -> void:
 	var minutes := int(game.hour * 60) % 1440
 	clock_label.text = "ДЕНЬ %02d    %02d:%02d" % [game.day, minutes / 60, minutes % 60]
 	status_label.text = ("НОЧЬ · ДОЖДЬ" if game.coastal_life.rain_strength > 0.2 else "НОЧЬ · ДЕРЖИТЕСЬ СВЕТА") if game.is_night() else game.coastal_life.weather_label()
-	movement_help.text = "WASD ходить  ·  Shift бег  ·  Пробел прыжок  ·  E действие  ·  F фонарь  ·  R еда  ·  M карта  ·  J журнал  ·  Esc меню"
+	movement_help.text = "WASD ходить  ·  Shift бег  ·  E действие  ·  F фонарь  ·  ПКМ / C луч  ·  R еда  ·  M карта  ·  J журнал" + ("  ·  P фото  ·  L альбом" if game.photo.has_camera else "") + "  ·  Esc меню"
 	if game.lighthouse_interior.active:
 		status_label.text = "МАЯК · ВНУТРИ"
 		movement_help.text = "WASD ходить по лестнице  ·  E действие  ·  F фонарь  ·  R еда  ·  M карта  ·  J журнал  ·  Esc меню"
@@ -417,13 +446,22 @@ func refresh() -> void:
 		status_label.text = room_title
 		movement_help.text = "WASD ходить  ·  E действие  ·  F фонарь  ·  R еда  ·  M карта  ·  J журнал  ·  Esc меню"
 	task_label.text = game.expedition.tasks()
+	# Журнал растёт вниз по содержимому, но не наезжает на нижние панели.
+	var lines: int = maxi(1, task_label.get_line_count())
+	var needed := 58.0 + lines * task_label.get_line_height() + 18.0
+	task_panel.size.y = clampf(needed, 200, 640)
+	task_label.size.y = task_panel.size.y - 70
 	demo_hint_label.text = game.first_shift_demo.hint()
 	demo_hint_panel.visible = not demo_hint_label.text.is_empty() and not game.first_shift_demo.is_open()
 	health_bar.value = game.health
 	hunger_bar.value = game.hunger
+	hunger_bar.modulate = Color(1, .45, .4) if game.hunger < 35 and int(Time.get_ticks_msec() / 400) % 2 == 0 else Color.WHITE
 	sanity_bar.value = game.sanity
 	stamina_bar.value = game.player.stamina
-	inventory_label.text = "Топливо %d   Дерево %d   Детали %d\nРыба %d   Еда %d   Вода %d/%d" % [game.inventory.fuel, game.inventory.wood, int(game.expedition.state.scrap), game.inventory.fish, game.inventory.food, game.survival.water, game.survival.FLASK_CAPACITY]
+	beam_bar.value = game.lantern_beam.charge
+	beam_bar.modulate = Color(1, .55, .45) if game.lantern_beam.exhausted else (Color(1.25, 1.2, 1.0) if game.lantern_beam.focusing else Color.WHITE)
+	beam_label.text = "ЛУЧ ОСТЫВАЕТ…" if game.lantern_beam.exhausted else ("ЛУЧ ФОНАРЯ · ПКМ" if game.player.lantern_on else "ЛУЧ · включите фонарь F")
+	inventory_label.text = "Топливо %d  Дерево %d  Камень %d  Детали %d\nРыба %d  Еда %d  Вода %d/%d  Лейка %d/%d" % [game.inventory.fuel, game.inventory.wood, int(game.inventory.get("stone", 0)), int(game.expedition.state.scrap), game.inventory.fish, game.inventory.food, game.survival.water, game.survival.FLASK_CAPACITY, game.homestead.can_water, game.homestead.CAN_SIZE]
 	warmth_label.visible = game.survival.exposure_enabled()
 	warmth_label.text = "ТЕПЛО %d%%" % roundi(game.survival.warmth)
 	if not game.food_items.is_empty():
@@ -443,12 +481,17 @@ func refresh() -> void:
 	if is_instance_valid(game.nearest_station) and game.nearest_station.station_id == "cook" and not game.fish_items.is_empty():
 		var raw_fish: Dictionary = game.fish_items[game.selected_fish]
 		prompt_label.text = "[E] %s %d г · [K] рецепты" % [raw_fish.name, raw_fish.weight]
+	if is_instance_valid(game.nearest_station) and game.building_interiors.active.is_empty() and game.INTERIOR_STATIONS.has(game.nearest_station.station_id) and not game.expedition.sailing:
+		prompt_label.text = "[E] Войти в радиостанцию · передатчик внутри" if game.nearest_station.station_id == "transmitter" else "[E] Войти в рубку · штурвал внутри"
 	var lighthouse_prompt: String = game.lighthouse_interior.prompt(game.player.position)
 	if not lighthouse_prompt.is_empty():
 		prompt_label.text = lighthouse_prompt
 	var building_prompt: String = game.building_interiors.prompt(game.player.position)
 	if not building_prompt.is_empty():
 		prompt_label.text = building_prompt
+	var event_prompt: String = game.island_events.prompt()
+	if not event_prompt.is_empty():
+		prompt_label.text = event_prompt
 	var extra_prompt: String = game.extras.prompt()
 	if not extra_prompt.is_empty():
 		prompt_label.text = extra_prompt
@@ -468,7 +511,7 @@ func refresh() -> void:
 	if fishing_overlay.visible:
 		fishing_overlay.queue_redraw()
 	message_label.text = game.message if game.message_time > 0 else ""
-	message_label.visible = not game.fishing.is_open()
+	message_label.visible = not game.fishing.is_open() and not game.radio.speaking()
 	danger.color.a = maxf(0.0, danger.color.a - get_process_delta_time() * 0.8)
 	atmosphere.material.set_shader_parameter("night", game.coastal_life.night_strength)
 	atmosphere.material.set_shader_parameter("stress", clampf((55 - game.sanity) / 55, 0, 1))

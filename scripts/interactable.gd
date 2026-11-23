@@ -6,13 +6,17 @@ extends Area3D
 @export var remaining: int = -1
 var selected := false
 var quest_target := false
+## Скрыть все маркеры (фоторежим) и показывать некоторые станции только вблизи.
+static var hide_markers := false
+var near_only := false
+var proximity := 0.0
 var marker_clock := 0.0
 
 func _process(delta: float) -> void:
 	marker_clock += delta
 	if has_node("InteractionMarker"):
 		var marker: Label3D = $InteractionMarker
-		marker.visible = is_available()
+		marker.visible = is_available() and not hide_markers and (not near_only or selected or quest_target or proximity < 8.0)
 		marker.position.y = 2.3 + sin(marker_clock * 2.2) * 0.08
 		marker.modulate = Color("ffe0a0") if selected else (Color("8fd7c0") if quest_target else Color(0.8, 0.71, 0.48, 0.6))
 		marker.scale = Vector3.ONE * (1.15 if selected or quest_target else 0.8)

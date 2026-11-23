@@ -111,6 +111,7 @@ func interact(id: String) -> bool:
 			if not cost(0,2): return false
 			state.signal = true
 			game.sound.radio_signal()
+			game.radio.say("transmitter_on", true, true)
 			game.notify("Передатчик работает! «Штормовая полоса закроет выход до %d-го дня. Готовьте катер и ждите контрольную группу». M — план." % game.campaign.calendar_days() if game.campaign.enabled else "Передатчик работает! «Вас слышим. С 7-го дня ждём катер у внешнего буя. Запасите еду и топливо». M — план.",10)
 		"ship_hull":
 			if not require_day(5): return false
@@ -211,12 +212,13 @@ func dawn() -> void:
 	for station in game.stations:
 		if station.station_id=="wood": station.remaining = 9
 	game.sanity = minf(100,game.sanity+12)
+	game.night_raids.on_dawn()
 	update_visuals()
 	if game.day>30:
 		game.finish_shift(false)
 		game.hud.menu_subtitle.text = "Прошло 30 дней. Последнее окно для выхода\nв море закрыто. Попробуйте подготовить катер раньше."
 	else:
-		game.notify("День %d: %s. Маяк нужно заправить заново. M — карта и план дня." % [game.day,title()],10)
+		game.notify(game.night_report if not game.night_report.is_empty() else "День %d: %s. Маяк нужно заправить заново. M — карта и план дня." % [game.day,title()],10)
 
 func sleep() -> bool:
 	if game.campaign.enabled:return game.campaign.request_rest()

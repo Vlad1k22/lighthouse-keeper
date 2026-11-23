@@ -86,6 +86,7 @@ func listen() -> void:
 			_receive(CREW,8)
 		1046:
 			message.text = "«Берег-четыре». Служебная частота. Ждите вызова по расписанию и сверяйте его контрольные отметки."
+			game.radio.say("service_freq", false, true)
 		_:
 			message.text = "Слышен только шум. Ищите частоту по отметкам на шкале."
 
@@ -96,6 +97,7 @@ func _receive(id: String, day: int) -> void:
 	if id not in game.journal_entries:
 		game.journal_entries.append(id)
 	message.text = ARCHIVE[id].title+" · Запись добавлена в журнал J."
+	game.radio.say("archive_log" if id==LOG else "archive_crew", false, true)
 	log_id = id
 	log_button.show()
 
