@@ -35,6 +35,11 @@ func _draw() -> void:
 		var door := point(game.LIGHTHOUSE_INTERIOR.OUTSIDE_DOOR)
 		draw_arc(door,9 if large else 5,0,TAU,24,Color("8fd7c0"),2)
 		if large:draw_line(player_point,door,Color(.56,.84,.75,.3),1)
+	if is_instance_valid(game.island_events) and game.island_events.is_active():
+		var event_point: Vector2 = point(game.island_events.point)
+		var pulse := 1.0 + .3*sin(Time.get_ticks_msec()*.008)
+		draw_circle(event_point,(5 if large else 3)*pulse,game.island_events.EVENTS[game.island_events.current].color)
+		if large:draw_string(ThemeDB.fallback_font,event_point+Vector2(8,-6),"!",HORIZONTAL_ALIGNMENT_LEFT,-1,16,Color("ffd08a"))
 	draw_circle(player_point,5 if large else 3,Color("ffebaf"))
 	for enemy in game.enemies:
 		if is_instance_valid(enemy): draw_circle(point(enemy.position),3 if large else 1.5,Color("bd8070"))

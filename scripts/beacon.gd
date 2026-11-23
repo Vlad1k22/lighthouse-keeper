@@ -6,7 +6,7 @@ extends Node3D
 		powered = value
 		if is_node_ready():
 			_apply_power()
-var turn_speed := 0.22
+var turn_speed := 0.34
 var lens_material: StandardMaterial3D
 var lens_color := Color.WHITE
 

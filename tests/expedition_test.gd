@@ -34,7 +34,7 @@ func run() -> void:
 	game.hours_per_second = 0
 	game.save_path = "user://automated_expedition_test.json"
 	var ex = game.expedition
-	check(game.stations.size()==26,"Northern coast adds seventeen interactables")
+	check(game.stations.filter(func(s): return not game.homestead.owns(s.station_id) and s.station_id != "camera").size()==26,"Northern coast adds seventeen interactables")
 	check(not interact("ship_helm") and not game.finished,"Unprepared vessel cannot depart")
 	check(not interact("tools"),"Tools unlock on day two")
 	check(not interact("ship_hull") and game.inventory.wood==0,"Early hull repair cannot charge resources")

@@ -9,6 +9,9 @@ var radio: AudioStreamPlayer
 var engine: AudioStreamPlayer
 var music: AudioStreamPlayer
 var horror_cache := {}
+var burn: AudioStreamPlayer
+var cue_player: AudioStreamPlayer
+var cue_cache := {}
 const TITLE_THEME = preload("res://assets/audio/music/menu_tide.wav")
 const END_THEME = preload("res://assets/audio/music/morning_signal.wav")
 
@@ -37,6 +40,12 @@ func _ready() -> void:
 	radio.volume_db = -23
 	add_child(radio)
 	engine = looping_player(6,4.0)
+	burn = looping_player(10, 1.2)
+	burn.volume_db = -60
+	cue_player = AudioStreamPlayer.new()
+	cue_player.bus = "Environment"
+	cue_player.volume_db = -15
+	add_child(cue_player)
 	music = AudioStreamPlayer.new()
 	music.bus = "Music"
 	music.volume_db = -13
@@ -113,6 +122,16 @@ func noise_stream(duration: float, kind: int) -> AudioStreamWAV:
 			value = (sin(t*TAU*72)*.55+filtered*.2)*exp(-beat*38)
 		elif kind==8:
 			value = (filtered*.3+sin(t*TAU*163)*.035)*pow(sin(PI*t/duration),2)
+		elif kind==10:
+			value = filtered*.55*(.6+.4*sin(TAU*t*13))+sin(TAU*t*190)*.05
+		elif kind==11:
+			var pulse := fmod(t,.32)
+			value = (sin(TAU*t*660)*.5+sin(TAU*t*880)*.3)*exp(-pulse*9)*(1.0 if t<.96 else 0.0)
+		elif kind==12:
+			var note := 523.25 if t<.16 else (659.25 if t<.32 else 783.99)
+			value = sin(TAU*t*note)*.4*exp(-fmod(t,.16)*7)*(1.0-t/duration)
+		elif kind==13:
+			value = (sin(TAU*t*lerpf(220,90,t/duration))*.5+filtered*.35)*pow(1.0-t/duration,1.5)
 		elif kind==9:
 			value = filtered*.45*(.2+.8*maxf(0,sin(TAU*t*7)))
 		else:
@@ -122,7 +141,7 @@ func noise_stream(duration: float, kind: int) -> AudioStreamWAV:
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = rate
 	stream.data = data
-	if kind in [0, 3, 4, 6]:
+	if kind in [0, 3, 4, 6, 10]:
 		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		stream.loop_begin = 0
 		stream.loop_end = count
@@ -136,6 +155,28 @@ func footstep() -> void:
 func interact(kind: String = "") -> void:
 	effect.pitch_scale = {"wood": 0.7, "beacon": 0.65, "cook": 1.15, "fish": 1.3}.get(kind, 1.0)
 	effect.play()
+
+func set_burn(active: bool) -> void:
+	if not is_instance_valid(burn):
+		return
+	burn.volume_db = move_toward(burn.volume_db, -19.0 if active else -60.0, 6.0 if active else 3.0)
+
+## alarm — тревога события, chime — цель выполнена, dispel — тень рассеяна.
+func cue(kind: String) -> void:
+	var type: int = {"alarm":11,"chime":12,"dispel":13}.get(kind,12)
+	if not cue_cache.has(type):cue_cache[type]=noise_stream({11:1.0,12:.62,13:.55}[type],type)
+	if kind == "dispel":
+		var one_shot := AudioStreamPlayer.new()
+		one_shot.bus = "Environment"
+		one_shot.stream = cue_cache[type]
+		one_shot.volume_db = -13
+		one_shot.pitch_scale = randf_range(.9, 1.15)
+		add_child(one_shot)
+		one_shot.finished.connect(one_shot.queue_free)
+		one_shot.play()
+		return
+	cue_player.stream = cue_cache[type]
+	cue_player.play()
 
 func radio_signal() -> void:
 	radio.play()
@@ -155,7 +196,7 @@ func horror_cue(kind: String, at: Vector3) -> void:
 	cue.play()
 
 func _exit_tree() -> void:
-	for audio_player in [sea, steps, effect, rainfall, drone, radio, engine, music]:
+	for audio_player in [sea, steps, effect, rainfall, drone, radio, engine, music, burn, cue_player]:
 		if is_instance_valid(audio_player):
 			audio_player.stop()
 			audio_player.stream = null

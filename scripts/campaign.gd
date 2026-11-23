@@ -141,7 +141,13 @@ func complete_goal(index: int) -> void:
 	if index==0 and game.day in clue_days() and "c:code" not in game.journal_entries:game.journal_entries.append("c:code")
 	game.sound.interact("wood")
 	game.interaction_cooldown = .35
-	game.notify("%s. %s" % [goal.title,"Задачи выполнены. Подготовьтесь к ночи у хижины." if day_complete() else "Следующая цель отмечена на карте M."],7)
+	var voiced: String = {"5:radio":"code_digit_1","13:transmitter":"code_confirm"}.get("%d:%s" % [game.day,goal.id],"")
+	if not voiced.is_empty():
+		game.radio.say(voiced, true, true)
+	if not str(goal.story).is_empty():
+		game.notify(str(goal.story)+"  (J — журнал)",11)
+	else:
+		game.notify("%s. %s" % [goal.title,"Задачи выполнены. Подготовьтесь к ночи у хижины." if day_complete() else "Следующая цель подсвечена бирюзовым маркером."],7)
 	game.expedition.update_visuals()
 
 func intercept(id: String) -> int:
@@ -157,6 +163,7 @@ func intercept(id: String) -> int:
 				if not state.first_radio:
 					state.first_radio = true
 					game.sound.radio_signal()
+					game.radio.say("first_radio", false, true)
 					game.notify("Сквозь шум слышно: «Красный ящик. Старый склад». Голос почти ваш.", 7)
 				return 1
 			if id=="beacon" and state.night_clock>=FIRST_SHADOW_AT and game.lighthouse_on and state.first_route!="outside":
@@ -178,6 +185,7 @@ func intercept(id: String) -> int:
 				return 0
 			if requires_radio_verification():
 				game.hud.tuner.open_verification()
+				game.radio.say("false_call", false, true)
 			else:
 				confirm_night_radio()
 			return 1
@@ -207,14 +215,18 @@ func confirm_night_radio() -> void:
 	state.need_radio = false
 	state.event_done = true
 	game.sound.radio_signal()
+	if requires_radio_verification():
+		game.radio.say("confirm_13" if game.day==13 else "confirm_11", false, true)
+	elif entry().night.kind=="static":
+		game.radio.say("static_voice", false, true)
 	if requires_radio_verification() or entry().night.kind=="last":
 		game.notify("Настоящий сигнал подтверждён. До утра оставайтесь у света.",8)
 	else:
 		game.notify("Вы отключили ложную передачу. Дождитесь конца ночной сцены у хижины.",8)
 
 func prep_missing() -> String:
-	if not game.barricade_built:return "Укрепите хижину у верстака: 3 дерева."
-	if not game.lighthouse_on:return "Включите генератор маяка. Топливо — в гавани."
+	if not game.barricade_built:return "Тени сломали баррикаду — почините её у верстака: 1 дерево." if game.night_raids.barricade_broken else "Укрепите хижину у верстака: 3 дерева."
+	if not game.lighthouse_on:return "Тень сорвала генератор — перезапустите его: E у генератора маяка." if game.night_raids.sabotaged else "Включите генератор маяка. Топливо — в гавани."
 	if game.hunger<12:return "Съешьте готовую еду клавишей R или наберите воду у насоса."
 	if not game.player.lantern_on:return "Включите ручной фонарь клавишей F."
 	return ""
@@ -225,7 +237,7 @@ func begin_night() -> bool:
 		game.notify("Окно выхода открыто. Подготовьте катер и подойдите к штурвалу.")
 		return false
 	if not day_complete():
-		game.notify("Сначала завершите дневную задачу. Ближайшая цель отмечена на карте M.")
+		game.notify("Сначала завершите дневную задачу. Цель подсвечена бирюзовым маркером, стрелка у края экрана ведёт к ней.")
 		return false
 	var missing := prep_missing()
 	if not missing.is_empty():
@@ -271,7 +283,8 @@ func advance(delta: float) -> void:
 		return
 	if game.player.lantern_on and game.is_safe(game.player.position):state.safe_clock += delta
 	var kind: String = entry().night.kind
-	if kind not in ["blackout","last","static","false_call"] and state.safe_clock>=4:state.event_done = true
+	# В обычные ночи событие — сама оборона: засчитывается сразу, дальше важно продержаться.
+	if kind not in ["blackout","last","static","false_call"] and (state.safe_clock>=4 or state.night_clock>=3):state.event_done = true
 	if int(state.cue)==0 and state.night_clock>=2:
 		state.cue = 1
 		game.sound.horror_cue("knock" if kind in ["knocks","siege"] else "whisper",Vector3(2,1.8,4.3))
@@ -281,7 +294,11 @@ func advance(delta: float) -> void:
 		game.camera_shake = maxf(game.camera_shake,.16 if game.day>7 else .06)
 	elif int(state.cue)==2 and state.night_clock>=duration:
 		state.cue = 3
-		game.notify("Ночная сцена закончилась. [E] у двери — встретить рассвет." if state.event_done else night_instruction(),8)
+		if not state.event_done:
+			game.notify(night_instruction(),8)
+	# Оборона длится ровно отведённое время. Затем рассвет наступает сам — если свет и укрытие целы.
+	if state.night_clock>=duration and state.event_done and prep_missing().is_empty() and game.day<calendar_days():
+		finish_night()
 
 func complete_first_watch(route: String) -> void:
 	state.first_route = route
@@ -337,7 +354,7 @@ func night_instruction() -> String:
 	if state.blackout:return "Восстановите питание у генератора маяка · E."
 	if state.need_radio or entry().night.kind in ["static","false_call"] and not state.event_done:
 		return "Домашнее радио · E. Сверьте позывной и отметку в журнале." if requires_radio_verification() else "Домашнее радио у западной стены хижины · E."
-	return "Фонарь F включён; побудьте в безопасном освещённом месте."
+	return "Защищайте генератор и хижину до рассвета: выжигайте тени лучом (ПКМ)."
 
 func request_rest() -> bool:
 	ensure_day()
@@ -382,7 +399,9 @@ func finish_night() -> void:
 	game.expedition.dawn()
 	ensure_day()
 	game.clear_enemies()
-	game.notify("День %d · %s. %s" % [game.day,entry().title,entry().brief],11)
+	var report: String = game.night_report
+	game.night_report = ""
+	game.notify((report+"\n" if not report.is_empty() else "")+"День %d · %s. %s" % [game.day,entry().title,entry().brief],11)
 	game.save_checkpoint()
 
 func spawn_threats() -> void:
@@ -437,11 +456,21 @@ func tasks() -> String:
 		return "ДЕМО · ПЕРВАЯ СМЕНА\nРАССВЕТ\n\n✓ Маяк работает\n✓ Дежурство завершено\n○ Ответить береговой станции\n\nJ — журнал · M — карта"
 	var lines := "ДЕМО · ПЕРВАЯ СМЕНА\nОБУСТРОЙСТВО\n" if game.first_shift_demo.active() else "ДЕНЬ %02d / %d · %s\n%s\n" % [game.day,calendar_days(),entry().title,act()]
 	if state.night:
-		var guidance := "E у хижины — рассвет" if state.event_done else "Не уходите от света"
+		var left := maxi(0,ceili(float(entry().night.seconds)-float(state.night_clock)))
 		if game.day==1:
-			guidance = "E у койки — рассвет" if state.event_done and state.night_clock>=entry().night.seconds else ""
-		return lines+"\nНОЧНОЕ ДЕЖУРСТВО · %d сек\n%s\n\n%s\nM — карта · J — записи" % [maxi(0,ceili(float(entry().night.seconds)-float(state.night_clock))),"✓ Событие пройдено" if state.event_done else "○ "+night_instruction(),guidance]
-	for i in entry().goals.size():lines += "\n%s %s" % ["✓" if goal_done(i) else "○",entry().goals[i].title]
+			var guidance := "E у койки — рассвет" if state.event_done and left<=0 else ""
+			return lines+"\nПЕРВАЯ НОЧЬ · %d сек\n%s\n%s" % [left,"✓ Событие пройдено" if state.event_done else "○ "+night_instruction(),guidance]
+		var steps := "%s Ночное событие\n" % ("✓" if state.event_done else "○") if entry().night.kind in ["blackout","last","static","false_call"] else ""
+		var missing := prep_missing()
+		return lines+"\nОБОРОНА ДО РАССВЕТА · %d сек\n%s%s Маяк горит\n%s Баррикада цела\n%s" % [left,steps,"✓" if game.lighthouse_on else "○","✓" if game.barricade_built else "○","Рассвет наступит сам." if missing.is_empty() else missing]
+	var current := next_index()
+	for i in entry().goals.size():
+		var mark := "✓" if goal_done(i) else ("▸" if i==current else "○")
+		var where := ""
+		if i==current and is_instance_valid(game.hud) and is_instance_valid(game.hud.overlay) and game.hud.overlay.has_target:
+			where = "  · %d м" % roundi(Vector2(game.player.position.x-game.hud.overlay.target_point.x,game.player.position.z-game.hud.overlay.target_point.z).length())
+		lines += "\n%s %s%s" % [mark,entry().goals[i].title,where]
+	if current<0 and game.day<calendar_days():lines += "\n▸ Встретить ночь: E у хижины"
 	return lines+"\n\n%s Маяк  ·  %s Хижина\n%s Фонарь  ·  R — еда\nM — карта · J — записи" % ["✓" if game.lighthouse_on else "○","✓" if game.barricade_built else "○","✓" if game.player.lantern_on else "○"]
 
 func board_summary(ship_checks: String) -> String:

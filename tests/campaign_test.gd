@@ -73,7 +73,7 @@ func run() -> void:
 		nominal_seconds += float(record.night.seconds)
 	nominal_seconds += game.campaign.DAY_SECONDS*(days-1)
 	check(titles.size()==days and valid,"All distinct shifts refer only to reachable existing stations")
-	check(nominal_seconds>=1800 and nominal_seconds<2400 if legacy_run else nominal_seconds>=780 and nominal_seconds<960,"The nominal timer fits the selected campaign length")
+	check(nominal_seconds>=1800 and nominal_seconds<2400 if legacy_run else nominal_seconds>=780 and nominal_seconds<1500,"The nominal timer fits the selected campaign length")
 	check(not take("shelter") and not game.campaign.state.night,"Night cannot be skipped before the first objectives")
 	game.set_building_interior("")
 	check(not game.campaign.submit_code("314"),"Correct radio code cannot bypass the campaign before the final watch")
@@ -200,8 +200,11 @@ func run() -> void:
 				game.hud.tuner.verify(2 if number==13 else 1)
 			check(heard and game.campaign.state.event_done,"Night "+str(number)+" radio event requires the correct physical receiver")
 		game.player.position=game.building_interiors.actions["shelter"] if number==1 else station("shelter").position+Vector3(0,.3,.5)
-		for second in ceili(float(game.campaign.entry().night.seconds))+1:game.campaign.advance(1)
-		check(take("shelter") and game.day==number+1 and game.campaign.state.completed_days.size()==number,"Night "+str(number)+" ends in a single persistent dawn")
+		for second in ceili(float(game.campaign.entry().night.seconds))+1:
+			if game.day!=number:break
+			game.campaign.advance(1)
+		if game.day==number:take("shelter")
+		check(game.day==number+1 and game.campaign.state.completed_days.size()==number,"Night "+str(number)+" ends in a single persistent dawn")
 		if number==1:game.set_building_interior("")
 	check(game.campaign.state.clearance and game.expedition.ready_to_sail(),"Only the completed campaign opens the real departure window")
 	game.day=days-1

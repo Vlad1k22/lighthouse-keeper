@@ -15,6 +15,14 @@ const PREFERENCES = preload("res://scripts/game_preferences.gd")
 const EXTRAS = preload("res://scripts/game_extras.gd")
 const LIGHTHOUSE_INTERIOR = preload("res://scripts/lighthouse_interior.gd")
 const BUILDING_INTERIORS = preload("res://scripts/building_interiors.gd")
+const LANTERN_BEAM = preload("res://scripts/lantern_beam.gd")
+const NIGHT_RAIDS = preload("res://scripts/night_raids.gd")
+const ISLAND_EVENTS = preload("res://scripts/island_events.gd")
+const RADIO_VOICE = preload("res://scripts/radio_voice.gd")
+const MINIGAMES = preload("res://scripts/minigames.gd")
+const HOMESTEAD = preload("res://scripts/homestead.gd")
+const PHOTO_MODE = preload("res://scripts/photo_mode.gd")
+const PHOTO_ALBUM = preload("res://scripts/photo_album.gd")
 var expedition := EXPEDITION.new()
 var survival := SURVIVAL.new()
 var campaign := CAMPAIGN.new()
@@ -23,6 +31,19 @@ var preferences := PREFERENCES.new()
 var extras := EXTRAS.new()
 var lighthouse_interior := LIGHTHOUSE_INTERIOR.new()
 var building_interiors := BUILDING_INTERIORS.new()
+var lantern_beam: Node3D
+var night_raids: Node
+var island_events: Node3D
+var radio: Node
+var minigames: Control
+var homestead: Node3D
+var photo: Control
+var album: Control
+var viewer: Control
+## Итог мини-игры, которая привела к действию: "done", для жарки — "perfect" / "ok" / "burnt".
+var minigame_result := ""
+var night_report := ""
+var shadows_dispelled := 0
 var checkpoints_enabled := true
 var loading_save := false
 var last_run_won := false
@@ -37,7 +58,7 @@ var sound: Node
 var stations: Array = []
 var nearest_station: Area3D
 var enemies: Array = []
-var inventory := {"fuel": 0, "wood": 0, "fish": 0, "food": 1}
+var inventory := {"fuel": 0, "wood": 0, "fish": 0, "food": 1, "stone": 0}
 var fish_items: Array[Dictionary] = []
 var food_items: Array[Dictionary] = [PROVISIONS.ration()]
 var selected_fish := 0
@@ -100,11 +121,35 @@ func _ready() -> void:
 	preload("res://scripts/cabin_visual.gd").install(world.get_node("IslandGeometry/KeeperCabin"))
 	preload("res://scripts/radio_visual.gd").install(world.get_node("NorthernCoast"))
 	building_interiors.setup(world)
+	for pass_index in 2:
+		preload("res://scripts/zfight_fix.gd").apply(world)
 	expedition.setup(self)
 	campaign.setup(self)
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--preview-") or argument.begins_with("--demo-") or argument=="--no-checkpoints":checkpoints_enabled=false
 	stations = get_tree().get_nodes_in_group("interactables")
+	lantern_beam = LANTERN_BEAM.new()
+	lantern_beam.name = "LanternBeam"
+	lantern_beam.game = self
+	add_child(lantern_beam)
+	night_raids = NIGHT_RAIDS.new()
+	night_raids.name = "NightRaids"
+	night_raids.game = self
+	add_child(night_raids)
+	island_events = ISLAND_EVENTS.new()
+	island_events.name = "IslandEvents"
+	island_events.game = self
+	add_child(island_events)
+	radio = RADIO_VOICE.new()
+	radio.name = "RadioVoice"
+	radio.game = self
+	add_child(radio)
+	homestead = HOMESTEAD.new()
+	homestead.name = "Homestead"
+	homestead.game = self
+	add_child(homestead)
+	homestead.setup()
+	extras.setup_outdoor(world)
 	sound = Node.new()
 	sound.set_script(SOUND)
 	add_child(sound)
@@ -117,6 +162,23 @@ func _ready() -> void:
 	hud = CanvasLayer.new()
 	hud.set_script(HUD)
 	add_child(hud)
+	minigames = MINIGAMES.new()
+	minigames.name = "Minigames"
+	hud.root.add_child(minigames)
+	minigames.setup(self)
+	photo = PHOTO_MODE.new()
+	photo.name = "PhotoMode"
+	hud.root.add_child(photo)
+	photo.setup(self)
+	photo.hide()
+	album = PHOTO_ALBUM.new()
+	album.name = "PhotoAlbum"
+	hud.root.add_child(album)
+	album.setup(self)
+	viewer = preload("res://scripts/easter_viewer.gd").new()
+	viewer.name = "EasterViewer"
+	hud.root.add_child(viewer)
+	viewer.setup(self)
 	camera.position = camera_focus + Vector3(29, 34, 40)
 	camera.look_at(camera_focus)
 	camera.size = camera_zoom
@@ -216,7 +278,7 @@ func start_shift() -> void:
 		hud.show_game()
 		return
 	fishing.close()
-	inventory = {"fuel": 0, "wood": 0, "fish": 0, "food": 1}
+	inventory = {"fuel": 0, "wood": 0, "fish": 0, "food": 1, "stone": 0}
 	fish_items.clear()
 	food_items = [PROVISIONS.ration()]
 	selected_fish = 0
@@ -229,6 +291,14 @@ func start_shift() -> void:
 	fuel_found = false
 	lighthouse_on = false
 	barricade_built = false
+	night_report = ""
+	shadows_dispelled = 0
+	lantern_beam.reset()
+	night_raids.reset()
+	island_events.reset()
+	radio.reset()
+	homestead.reset()
+	photo.reset()
 	beacon.set_powered(false)
 	expedition.reset()
 	campaign.reset()
@@ -256,7 +326,7 @@ func start_shift() -> void:
 	player.enabled = true
 	overview = false
 	hud.show_game()
-	notify("День 1. Найдите канистру и запустите маяк. Следующая цель отмечена на карте M.", 10)
+	notify("День 1. Найдите канистру и запустите маяк. Текущая цель подсвечена бирюзовым столбом света.", 10)
 	save_checkpoint()
 
 func reset_world_state() -> void:
@@ -294,8 +364,19 @@ func _process(delta: float) -> void:
 			if hour >= 24:
 				hour -= 24
 				day += 1
+		night_raids.advance(delta)
+		island_events.advance(delta)
+		homestead.advance(delta)
+		photo.advance(delta)
 		survival.advance(delta)
-		hunger = maxf(0, hunger - delta * (0.025 if campaign.enabled else 0.11))
+		# Голод ощутим: за сутки уходит около трети сытости, бег и работа тратят больше.
+		var drain := 0.11
+		if campaign.enabled:
+			drain = 0.025 if first_shift_demo.active() else 0.17
+			if Input.is_physical_key_pressed(KEY_SHIFT) and player.velocity.length() > 4.5:
+				drain += 0.12
+		hunger = maxf(0, hunger - delta * drain)
+		apply_hunger(delta)
 		if hunger <= 0:
 			health -= delta * 0.8
 		sanity = clampf(sanity + delta * (-0.14 if is_night() and not is_safe(player.position) else 0.04), 0, 100)
@@ -310,7 +391,10 @@ func _process(delta: float) -> void:
 				spawn_shadow(Vector3(-13, 1.5, 4))
 				spawn_clock = 0
 		else:
-			clear_enemies()
+			if island_events.keeps_day_enemies():
+				enemies = enemies.filter(func(enemy): return enemy.day_event)
+			else:
+				clear_enemies()
 			night_spawned = false
 			if hour >= 6 and hour < 20:
 				expedition.dawn()
@@ -323,6 +407,7 @@ func _process(delta: float) -> void:
 			player.reset_motion()
 			take_damage(10)
 			notify("Течение слишком сильное. Вы вернулись к хижине.")
+	lantern_beam.tick(delta, active and player.enabled)
 	message_time = maxf(0, message_time - delta)
 	update_atmosphere()
 	sound.set_ambience(coastal_life.night_strength, coastal_life.rain_strength)
@@ -339,6 +424,8 @@ func _process(delta: float) -> void:
 			capture_preview.call_deferred()
 
 func update_camera(delta: float) -> void:
+	if is_instance_valid(photo) and photo.active:
+		return
 	var focus := Vector3(-5, 2, 3)
 	var zoom := 42.0
 	var offset := Vector3(29, 34, 40)
@@ -370,6 +457,8 @@ func update_camera(delta: float) -> void:
 func set_lighthouse_interior(inside: bool) -> void:
 	lighthouse_interior.set_active(inside)
 	player.indoors = inside
+	player.indoor_speed = 3.4 if inside else 2.35
+	player.indoor_running = inside
 	camera.environment = lighthouse_interior.room_env if inside else null
 	world.visible = not inside
 	overview = false
@@ -396,6 +485,23 @@ func lighthouse_action() -> bool:
 			notify("Линза вращается. Свет маяка виден с моря." if lighthouse_on else "Линза погасла. Питание подаётся от генератора снаружи.")
 	return inside
 
+## Пробел внутри маяка: быстро подняться к линзе или спуститься к двери.
+func lighthouse_quick_climb() -> void:
+	if not lighthouse_interior.active or player.jump_in_progress or hud.fading:
+		return
+	var at_top: bool = player.position.y > LIGHTHOUSE_INTERIOR.ORIGIN.y + LIGHTHOUSE_INTERIOR.TOP - .5
+	var target: Vector3 = LIGHTHOUSE_INTERIOR.ORIGIN + (LIGHTHOUSE_INTERIOR.INSIDE_DOOR + Vector3.UP*.045 + Vector3(-.35, 0, .1) if at_top else Vector3(1, LIGHTHOUSE_INTERIOR.TOP + .05, .76))
+	player.enabled = false
+	hud.fade_through(func():
+		player.position = target
+		player.velocity = Vector3.ZERO
+		player.reset_motion()
+		camera_focus = player.position + Vector3.UP*.75
+		update_camera(0.0)
+		player.enabled = playing and not paused and not finished
+		notify("Фонарная площадка. E у линзы — осмотреть." if not at_top else "Вы спустились к двери маяка.", 3))
+	sound.footstep()
+
 func map_player_position() -> Vector3:
 	if not building_interiors.active.is_empty():
 		return building_interiors.exit_at(building_interiors.active)
@@ -405,9 +511,9 @@ func set_building_interior(id: String) -> void:
 	if id != "cabin":
 		extras.stop_record()
 	building_interiors.set_room(id)
-	if id == "cabin":
-		extras.install_cabin(building_interiors.instances[id])
 	var inside := not id.is_empty()
+	if inside:
+		extras.install_room(id, building_interiors.instances[id])
 	player.indoors = inside
 	camera.environment = building_interiors.room_env if inside else null
 	world.visible = not inside
@@ -420,13 +526,34 @@ func building_door_action() -> bool:
 	if id.is_empty():
 		return false
 	if building_interiors.active.is_empty():
-		set_building_interior(id)
-		player.position = building_interiors.spawn_at(id)
-		place_camera_after_door(building_interiors.camera_focus(player.position), building_interiors.zoom())
+		enter_building(id)
 	else:
 		exit_building()
 	sound.interact("wood")
 	interaction_cooldown = .28
+	return true
+
+func enter_building(id: String) -> void:
+	set_building_interior(id)
+	player.position = building_interiors.spawn_at(id)
+	place_camera_after_door(building_interiors.camera_focus(player.position), building_interiors.zoom())
+
+## Передатчик и штурвал работают только изнутри: E у внешней станции заводит в радиостанцию или рубку.
+const INTERIOR_STATIONS := {"transmitter": "radio", "ship_helm": "ship"}
+
+func interior_redirect(station: Area3D) -> bool:
+	if not is_instance_valid(station) or not building_interiors.active.is_empty() or lighthouse_interior.active or expedition.sailing:
+		return false
+	var room: String = INTERIOR_STATIONS.get(station.station_id, "")
+	if room.is_empty():
+		return false
+	if hud.fading:
+		return true
+	hud.fade_through(func():
+		enter_building(room)
+		notify("Внутри: подойдите к %s (◆) и нажмите E." % ("передатчику" if room == "radio" else "штурвалу"), 4.0))
+	sound.interact("wood")
+	interaction_cooldown = .5
 	return true
 
 func exit_building() -> void:
@@ -462,6 +589,10 @@ func update_atmosphere() -> void:
 	coastal_life.story_storm = campaign.enabled and campaign.state.night and campaign.entry().night.kind in ["storm","last"]
 	if campaign.enabled and campaign.state.night and campaign.entry().night.kind in ["silence","double"]:
 		env.fog_density += .003
+	var event_fog: float = island_events.fog_strength() if is_instance_valid(island_events) else 0.0
+	if event_fog > 0:
+		env.fog_density += .012 * event_fog
+		env.fog_light_color = env.fog_light_color.lerp(Color("4d5a66"), .5 * event_fog)
 
 func is_night() -> bool:
 	return hour >= 20 or hour < 6
@@ -528,6 +659,22 @@ func attempt_interaction(station: Area3D) -> bool:
 	var demo_result := first_shift_demo.intercept(station.station_id)
 	if demo_result >= 0:
 		return demo_result == 1
+	var photo_result: int = photo.intercept(station.station_id)
+	if photo_result >= 0:
+		interaction_cooldown = 0.35
+		return photo_result == 1
+	var home_result: int = -1 if station.station_id == "workbench" and night_raids.barricade_broken else homestead.intercept(station.station_id)
+	if home_result >= 0:
+		interaction_cooldown = 0.35
+		return home_result == 1
+	var raid_result: int = night_raids.intercept(station.station_id)
+	if raid_result >= 0:
+		interaction_cooldown = 0.35
+		return raid_result == 1
+	var event_result: int = island_events.intercept(station.station_id)
+	if event_result >= 0:
+		interaction_cooldown = 0.35
+		return event_result == 1
 	var handled: int = campaign.intercept(station.station_id)
 	if handled>=0:return handled==1
 	if station.station_id in EXPEDITION.IDS:
@@ -583,6 +730,10 @@ func attempt_interaction(station: Area3D) -> bool:
 				notify("Сначала поймайте рыбу на причале.")
 				return false
 			var cooked := fish_items[selected_fish].duplicate(true)
+			if minigame_result in ["perfect", "ok", "burnt"]:
+				cooked.recipe = "burnt" if minigame_result == "burnt" else "fried"
+				cooked.quality = minigame_result == "perfect"
+				cooked.name = {"perfect":"Жареная рыба с корочкой","ok":"Жареная рыба","burnt":"Подгоревшая рыба"}[minigame_result]
 			fish_items.remove_at(selected_fish)
 			food_items.append(cooked)
 			selected_food = food_items.size() - 1
@@ -596,7 +747,7 @@ func attempt_interaction(station: Area3D) -> bool:
 			unlock_story("sign")
 		"radio":
 			unlock_story("radio")
-			sound.radio_signal()
+			radio.say("alone", true)
 	if station.station_id != "radio":
 		sound.interact(station.station_id)
 	interaction_cooldown = 0.35
@@ -604,7 +755,7 @@ func attempt_interaction(station: Area3D) -> bool:
 	return true
 
 func start_fishing() -> void:
-	fishing.begin()
+	fishing.begin(-1, island_events.species_bonus())
 	player.enabled = false
 	player.velocity = Vector3.ZERO
 	player.set_fishing_pose(true)
@@ -616,6 +767,7 @@ func on_fishing_resolved(caught: bool) -> void:
 		sync_provisions()
 		sound.interact("fish")
 		notify("Улов: %s! Приготовьте рыбу на печи возле хижины." % str(fishing.fish.name).to_lower())
+		island_events.on_fish_caught()
 	else:
 		notify("Рыба ушла. На причале можно попробовать снова.")
 
@@ -655,7 +807,7 @@ func spawn_night() -> void:
 			spawn_shadow(at)
 	notify("На острове темнеет. Фонарь и свет маяка отгоняют тени.", 8)
 
-func spawn_shadow(at: Vector3, kind := "shadow") -> void:
+func spawn_shadow(at: Vector3, kind := "shadow") -> CharacterBody3D:
 	var enemy := SHADOW_SCENE.instantiate()
 	enemy.position = at
 	enemy.keeper = player
@@ -663,12 +815,47 @@ func spawn_shadow(at: Vector3, kind := "shadow") -> void:
 	enemy.kind = kind
 	add_child(enemy)
 	enemies.append(enemy)
+	return enemy
+
+## Тень рассеяна светом: обратная связь, рассудок и счёт для утренней награды.
+func on_shadow_dispelled(enemy: Node) -> void:
+	shadows_dispelled += 1
+	night_raids.on_dispelled(enemy)
+	sanity = minf(100, sanity + (6.0 if enemy.phantom else 3.0))
+	sound.cue("dispel")
+	camera_shake = maxf(camera_shake, .35)
+	feedback(enemy.global_position, "Морок рассеян" if enemy.phantom else "Тень рассеяна")
+
+func on_shadow_sabotage(enemy: Node, delta: float) -> void:
+	night_raids.on_sabotage(enemy, delta)
+
+func alert(title: String, text: String, seconds: float = 4.0) -> void:
+	if is_instance_valid(hud) and is_instance_valid(hud.overlay):
+		hud.overlay.alert(title, text, seconds)
 
 func clear_enemies() -> void:
 	for enemy in enemies:
 		if is_instance_valid(enemy):
 			enemy.queue_free()
 	enemies.clear()
+
+var hunger_warned := false
+
+## Последствия голода: медленнее восстанавливается выносливость, затем падают скорость и рассудок.
+func apply_hunger(delta: float) -> void:
+	player.speed_scale = 0.84 if hunger < 15 else 1.0
+	if hunger < 35:
+		player.stamina_recovery_scale *= 0.5
+		lantern_beam.regen_scale = 0.6 * extras.forecast_bonus()
+	else:
+		lantern_beam.regen_scale = extras.forecast_bonus()
+	if hunger < 15:
+		sanity = maxf(0, sanity - delta * 0.08)
+	if hunger < 35 and not hunger_warned:
+		hunger_warned = true
+		alert("ВЫ ГОЛОДНЫ", "Выносливость и фонарь восстанавливаются медленнее. Поешьте (R): рыба с причала, урожай с грядок", 5)
+	elif hunger > 45:
+		hunger_warned = false
 
 func take_damage(amount: float) -> void:
 	health = maxf(0, health - amount)
@@ -764,7 +951,9 @@ func refresh_journal() -> void:
 	else:
 		journal_page = posmod(journal_page, journal_entries.size())
 		var id: String = journal_entries[journal_page]
-		var entry: Dictionary = STORIES.get(id,RADIO_TUNER.ARCHIVE.get(id,{}))
+		var entry: Dictionary = STORIES.get(id,RADIO_TUNER.ARCHIVE.get(id,EXTRAS.STORIES.get(id,{})))
+		if entry.is_empty():
+			entry = island_events.journal_entry(id)
 		if entry.is_empty():
 			entry = campaign.journal_entry(id)
 		if id == FIRST_SHIFT_DEMO.LOG_ID and first_shift_demo.active():
@@ -787,12 +976,31 @@ func finish_shift(won: bool) -> void:
 	finished = true
 	last_run_won = won
 	player.enabled = false
-	if first_shift_demo.active():
-		hud.show_menu("demo_win" if won else "demo_loss")
-	else:
-		hud.show_menu("win" if won else "loss")
+	if photo.active:
+		photo.close()
+	var screen: String = ("demo_win" if won else "demo_loss") if first_shift_demo.active() else ("win" if won else "loss")
+	# После победы снимки смены складываются в слайд-шоу «Ваш остров».
+	if won and album.play_reel(photo.photos, func(): hud.show_menu(screen)):
+		hud.game_ui.hide()
+		return
+	hud.show_menu(screen)
 
 func _input(event: InputEvent) -> void:
+	if is_instance_valid(minigames) and minigames.visible and (event is InputEventKey or event is InputEventMouseButton):
+		minigames.handle(event)
+		get_viewport().set_input_as_handled()
+		return
+	if is_instance_valid(viewer) and viewer.visible and (event is InputEventKey or event is InputEventMouseButton):
+		viewer.handle(event)
+		get_viewport().set_input_as_handled()
+		return
+	if is_instance_valid(album) and album.visible and (event is InputEventKey or event is InputEventMouseButton):
+		album.handle(event)
+		get_viewport().set_input_as_handled()
+		return
+	if is_instance_valid(photo) and photo.active and photo.handle(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey:
 		if hud.fieldwork.visible:
 			hud.fieldwork.handle(event)
@@ -905,10 +1113,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				survival.drink()
 		KEY_E:
 			if interaction_cooldown <= 0:
-				if not lighthouse_action() and not building_door_action() and not extras.interact() and attempt_interaction(nearest_station) and not fishing.is_open() and player.enabled:
+				if not lighthouse_action() and not building_door_action() and not island_events.interact() and not extras.interact() and not interior_redirect(nearest_station) and not minigames.offer(nearest_station) and attempt_interaction(nearest_station) and not fishing.is_open() and player.enabled:
 					player.play_gesture("interact")
 		KEY_SPACE:
-			player.request_jump()
+			if lighthouse_interior.active:
+				lighthouse_quick_climb()
+			else:
+				player.request_jump()
 		KEY_F:
 			player.toggle_lantern()
 		KEY_R:
@@ -922,6 +1133,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				overview = not overview
 		KEY_J:
 			open_journal()
+		KEY_P:
+			photo.toggle()
+		KEY_L:
+			album.open_album()
 		KEY_V:
 			coastal_life.cycle_weather()
 			notify("Погода: " + ["автоматически", "дождь", "без дождя"][coastal_life.weather_mode])
@@ -956,6 +1171,13 @@ func save_game(quiet: bool = false) -> bool:
 	state["selected_fish"] = selected_fish
 	state["selected_food"] = selected_food
 	state["fishing_casts"] = fishing.casts
+	state["lantern_beam"] = lantern_beam.save_data()
+	state["night_raids"] = night_raids.save_data()
+	state["bottle_notes"] = island_events.notes_found
+	state["letters_found"] = island_events.letters_found
+	state["extras"] = extras.save_data()
+	state["homestead"] = homestead.save_data()
+	state["photos"] = photo.save_data()
 	for station in stations:
 		if station.station_id == "wood":
 			state.wood_remaining = station.remaining
@@ -1033,10 +1255,17 @@ func load_game() -> bool:
 	was_night = bool(state.get("was_night", false))
 	expedition.restore(state.get("expedition", {}))
 	survival.restore(state.get("survival",{}))
+	lantern_beam.restore(state.get("lantern_beam", {}))
+	night_raids.restore(state.get("night_raids", {}))
+	island_events.notes_found = maxi(0, int(state.get("bottle_notes", 0)))
+	island_events.letters_found = maxi(0, int(state.get("letters_found", 0)))
+	extras.restore(state.get("extras", {}))
+	homestead.restore(state.get("homestead", {}))
+	photo.restore(state.get("photos", {}))
 	if int(state.get("version",0))<4:campaign.enabled = true
 	campaign.restore(state.get("campaign",{}) if int(state.get("version",0))>=4 else {},int(state.get("version",0))<4)
 	for entry in state.get("journal", []):
-		if entry not in journal_entries and (STORIES.has(entry) or RADIO_TUNER.ARCHIVE.has(entry) or not campaign.journal_entry(str(entry)).is_empty()):
+		if entry not in journal_entries and (STORIES.has(entry) or RADIO_TUNER.ARCHIVE.has(entry) or not island_events.journal_entry(str(entry)).is_empty() or not campaign.journal_entry(str(entry)).is_empty()):
 			journal_entries.append(str(entry))
 	coastal_life.weather_mode = int(state.get("weather_mode", 0))
 	player.position = Vector3(state.position[0], state.position[1], state.position[2])

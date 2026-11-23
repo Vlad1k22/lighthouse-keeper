@@ -13,8 +13,19 @@ const GRAVITY := 22.0
 @export var sprint_speed: float = 6.3
 var enabled := false
 var indoors := false
+## Скорость в помещении; на лестнице маяка выше, и там разрешён бег.
+var indoor_speed := 2.35
+var indoor_running := false
+## Множитель скорости от состояния смотрителя (сильный голод замедляет).
+var speed_scale := 1.0
 var stamina := 100.0
 var lantern_on := true
+## Направление сфокусированного луча фонаря (ноль — луч не наведён).
+var focus_direction := Vector3.ZERO
+## Скорости, на которые рассчитаны клипы шага и трусцы (м/с), — по ним считается темп анимации.
+const WALK_PACE := 1.25
+const JOG_PACE := 3.4
+const WALK_LIMIT := 2.6
 var movement_yaw := 0.59
 var step_clock := 0.0
 var jump_requested := false
@@ -109,14 +120,17 @@ func _physics_process(delta: float) -> void:
 		gesture_time = 0
 		velocity.y = JUMP_SPEED
 		motion.play("jump", .055, true)
-	var running := not indoors and grounded and not launched and landing_time <= 0 and Input.is_physical_key_pressed(KEY_SHIFT) and stamina > 1 and direction.length_squared() > .01
-	var speed := 2.35 if indoors else (sprint_speed if running else walk_speed)
+	var running := (not indoors or indoor_running) and grounded and not launched and landing_time <= 0 and Input.is_physical_key_pressed(KEY_SHIFT) and stamina > 1 and direction.length_squared() > .01
+	var speed := ((indoor_speed * 1.6 if running else indoor_speed) if indoors else (sprint_speed if running else walk_speed))
 	if running:
 		stamina = maxf(0, stamina-18.0*delta)
 	elif grounded and stamina_delay <= 0:
 		stamina = minf(100, stamina+12.0*stamina_recovery_scale*delta)
 	if landing_time > 0:
 		speed *= .60
+	if focus_direction != Vector3.ZERO:
+		speed *= .72
+	speed *= speed_scale
 	var airborne := not grounded or launched
 	var acceleration := 10.0 if airborne else 25.0
 	velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
@@ -131,7 +145,9 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -.1
 	move_and_slide()
 	var moving := Vector2(velocity.x, velocity.z).length() > 0.2
-	if direction.length_squared() > .01:
+	if focus_direction != Vector3.ZERO:
+		$Visual.rotation.y = lerp_angle($Visual.rotation.y, atan2(focus_direction.x, focus_direction.z), minf(1,delta*16))
+	elif direction.length_squared() > .01:
 		$Visual.rotation.y = lerp_angle($Visual.rotation.y, atan2(direction.x, direction.z), minf(1,delta*12))
 	if not is_on_floor():
 		air_time += delta
@@ -148,12 +164,25 @@ func _physics_process(delta: float) -> void:
 		jump_in_progress = false
 		air_time = 0
 		if landing_time <= 0 and gesture_time <= 0:
-			motion.play(("run" if running else "walk") if moving else "idle")
+			var ground_speed := Vector2(velocity.x, velocity.z).length()
+			# Быстрый ход — широкая «трусца», медленный — шаг. Темп клипа следует за скоростью.
+			if not moving:
+				motion.rate = 1.0
+				motion.play("idle")
+			elif ground_speed > WALK_LIMIT:
+				motion.rate = clampf(ground_speed / JOG_PACE, .8, 1.9)
+				motion.play("jog" if motion.animator != null and motion.animator.has_animation("jog") else "run")
+			else:
+				motion.rate = clampf(ground_speed / WALK_PACE, .7, 1.9)
+				motion.play("walk")
 	if is_on_floor() and moving and landing_time <= 0:
 		step_clock += delta
 		if step_clock > (0.26 if running else 0.4):
 			step_clock = 0
 			stepped.emit()
+	# Наклон корпуса вперёд пропорционально скорости: бег перестаёт выглядеть «деревянным».
+	var lean := clampf(Vector2(velocity.x, velocity.z).length() / sprint_speed, 0, 1) * (.16 if running else .09)
+	$Visual.rotation.x = lerpf($Visual.rotation.x, lean if is_on_floor() else 0.0, minf(1, delta * 8))
 	motion.tick(delta)
 	_sync_lantern()
 

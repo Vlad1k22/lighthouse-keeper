@@ -33,7 +33,7 @@ func run() -> void:
 	game.hours_per_second = 0
 	game.save_path = "user://automated_first_shift_test.json"
 	game.start_shift()
-	check(game.stations.size() == 26, "Original nine and seventeen northern interaction stations exist")
+	check(game.stations.filter(func(s): return not game.homestead.owns(s.station_id) and s.station_id != "camera").size() == 26 and game.stations.size() == 38, "Original 26 stations plus 12 homestead and camera stations exist")
 	check(not game.attempt_interaction(station("fuel")), "Distant resource cannot be picked up")
 	check(not interact("beacon"), "Lighthouse requires fuel")
 	check(interact("fuel") and game.inventory.fuel == 1, "Fuel pickup enters inventory")
@@ -118,7 +118,7 @@ func run() -> void:
 	key.pressed = true
 	Input.parse_input_event(key)
 	await create_timer(0.5).timeout
-	check(game.player.motion.current == "walk" and game.player.motion.animator.is_playing(), "Blender rig plays the walking animation")
+	check(game.player.motion.current in ["walk", "jog"] and game.player.motion.animator.is_playing() and game.player.motion.rate > .7, "Blender rig plays a pace-matched locomotion animation")
 	key.pressed = false
 	Input.parse_input_event(key)
 	check(game.player.position.distance_to(initial_position) > 1.0, "WASD moves CharacterBody3D using physics")

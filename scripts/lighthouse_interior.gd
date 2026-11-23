@@ -137,15 +137,15 @@ func near_optic(at: Vector3) -> bool:
 
 func prompt(at: Vector3) -> String:
 	if near_door(at):
-		return "[E] Выйти из маяка" if active else "[E] Войти в маяк"
+		return "[E] Выйти из маяка   ·   Пробел — сразу к линзе" if active else "[E] Войти в маяк"
 	if not active:
 		return ""
 	if near_optic(at):
 		return "[E] Осмотреть линзу"
 	if at.y > ORIGIN.y+TOP-.18:
-		return "МАЯК · фонарная"
+		return "МАЯК · фонарная   ·   Пробел — быстро вниз"
 	var turn := clampi(ceili((at.y-ORIGIN.y+.01)/PITCH), 1, TURNS)
-	return "МАЯК · винтовая лестница   ↑   %d / %d" % [turn, TURNS]
+	return "Лестница %d / %d   ·   Пробел — сразу к линзе   ·   Shift — бегом" % [turn, TURNS]
 
 func set_active(value: bool) -> void:
 	if value and model == null:
